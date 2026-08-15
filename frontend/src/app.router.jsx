@@ -61,10 +61,10 @@ export const router = createBrowserRouter([
             },
             {
                 path: "orders",
-                element: <Orders />
+                element:<Protected><Orders /></Protected> 
             },{
                 path:"admin",
-                element:<Admin />
+                element:<Protected><Admin /></Protected> 
             }
         ]
     }

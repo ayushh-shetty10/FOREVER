@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
 
-    const {products,currency,cartItems,UpdateQuantity}=useShop();
+    const {products,currency,cartItems,UpdateCartFunc}=useShop();
     const [cartData,setCartData]=useState([]);
     const navigate = useNavigate();
 
@@ -57,9 +57,9 @@ const Cart = () => {
                 </div>
 
                 
-                <input type="number"  onChange={(e)=>e.target.value==="" || e.target.value==="0" ?null:UpdateQuantity(item._id,item.size,Number(e.target.value))} min={1} defaultValue={item.quantity} className='max-w-10 border sm:max-w-20 px-1 sm:px-2 sm:py-1 '/>
+                <input type="number"  onChange={(e)=>e.target.value==="" || e.target.value==="0" ?null:UpdateCartFunc(item._id,item.size,Number(e.target.value))} min={1} defaultValue={item.quantity} className='max-w-10 border sm:max-w-20 px-1 sm:px-2 sm:py-1 '/>
                   
-                <img onClick={()=>{UpdateQuantity(item._id,item.size,0)}} src={assets.bin_icon} alt="" className='w-4 cursor-pointer sm:w-5 mr-4'/>
+                <img onClick={()=>{UpdateCartFunc(item._id,item.size,0)}} src={assets.bin_icon} alt="" className='w-4 cursor-pointer sm:w-5 mr-4'/>
 
               </div>
             )

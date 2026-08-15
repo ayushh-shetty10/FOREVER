@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { authRouter } = require("./routes/authRoutes");
 const { productRouter } = require("./routes/productsRoutes");
+const { cartRouter } = require("./routes/cartRoutes");
 
 
 
@@ -23,6 +24,8 @@ app.get("/",(req,res)=>{
 
 app.use("/api/auth",authRouter);
 app.use("/api/product",productRouter);
+
+app.use("/api/cart",cartRouter);
 
 
 module.exports = {app};

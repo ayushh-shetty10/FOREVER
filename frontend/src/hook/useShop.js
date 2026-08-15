@@ -2,12 +2,12 @@ import { useContext } from "react"
 import { ShopContext } from "../context/ShopContext"
 import {toast} from "react-toastify"
 
-import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi} from "../api/api";
+import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi} from "../api/api";
 
 export const useShop = () =>{
    
     const context=useContext(ShopContext);
-    const {currency,delivery_fee,products,search,setSearch,cartItems,GetCartCount,AddToCart,UpdateQuantity,GetCartAmount, loading,setLoading,list,setList,user,setUser}=context;
+    const {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,GetCartCount,AddToCart,UpdateQuantity,GetCartAmount, loading,setLoading,list,setList,user,setUser,checkingAuth}=context;
 
    const AddItemFunc =async ({name,description,price,category,subCategory,sizes,bestseller,image1,image2,image3,image4}) => {
             setLoading(true);
@@ -126,10 +126,59 @@ export const useShop = () =>{
 
     }
 
+    const AddToCartFunc = async (itemId, size) => {
+        if (!size) {
+            toast.error("Select Product Size");
+            return;
+        }
+        setLoading(true);
+        try {
+            const response = await AddToCartApi({ itemId, size });
+            if (response) {
+                AddToCart(itemId, size);
+            }
+            return response;
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const UpdateCartFunc = async (itemId, size, quantity) => {
+        setLoading(true);
+        try {
+            const response = await UpdateCartApi({ itemId, size, quantity });
+            if (response) {
+                UpdateQuantity(itemId, size, quantity);
+            }
+            return response;
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const GetMyCartFunc = async () => {
+        setLoading(true);
+        try {
+            const response = await GetMyCartApi();
+            if (response?.cartData) {
+                setCartItems(response.cartData);
+            }
+            return response;
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
 
    
 
-    return {currency,delivery_fee,products,search,setSearch,cartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc};
+    return {currency,delivery_fee,products,search,setSearch,cartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc};
 
 
 }

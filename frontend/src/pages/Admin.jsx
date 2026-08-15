@@ -7,11 +7,13 @@ import { useState } from 'react';
 import AddItem from '../components/AddItem';
 import ListItems from '../components/ListItems';
 import ListOrders from '../components/ListOrders';
+import { useShop } from '../hook/useShop';
+import { Navigate } from 'react-router-dom';
 
 const Admin = () => {
-
+ const {user} = useShop();
     const [tab,setTab]=useState("add");
-  return (
+   if(user && user.role==="ADMIN") {return (
     <div className='border-t flex  '>
         {/* SideBar */}
         <div className="w-[18%] h-[body] border-r-2">
@@ -38,6 +40,8 @@ const Admin = () => {
             {tab === 'orders' && <ListOrders />}
         </div>
     </div>
+  )}else return (
+    <Navigate to="/" replace />
   )
 }
 

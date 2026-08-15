@@ -6,7 +6,8 @@ import { toast } from 'react-toastify'
 
 const Navbar = () => {
      const [visible,setVisible] = useState(false);
-     const {GetCartCount,LogoutFunc,setUser} = useShop();
+     const [showLogout,setShowLogout] = useState(false);
+     const {GetCartCount,LogoutFunc,setUser,user} = useShop();
      const navigate=useNavigate();
      
 const handleLogout= async() => {
@@ -15,6 +16,7 @@ const handleLogout= async() => {
         if(response.message==="User logged out successfully!"){
             toast("Logout Successfull!");
             setUser(null);
+            setShowLogout(false);
             navigate("/login");
         }else{
             toast.error(response.message);
@@ -47,24 +49,24 @@ const handleLogout= async() => {
                 <p>CONTACT</p>
                 <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden"/>
             </Link>
-            <Link to="/admin" className="flex flex-col items-center gap-1" >
+            {user && user.role==="ADMIN" &&<Link to="/admin" className="flex flex-col items-center gap-1" >
                 <p>ADMIN</p>
                 <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden"/>
-            </Link>
+            </Link>}
         </ul>
 
         <div className="flex items-center z-1 gap-6">
             <img src={assets.search_icon} alt="" className="w-5 cursor-pointer"/>
             <div className="group relative">
-               <Link to={"/login"} ><img src={assets.profile_icon} alt="" className="w-5 cursor-pointer"/></Link> 
-                <div className="absolute right-0 pt-4 dropdown-menu hidden group-hover:block ">
+               <img onClick={()=>{user? setShowLogout(!showLogout): navigate("/login")}} src={assets.profile_icon} alt="" className="w-5 cursor-pointer"/>
+                {user && showLogout &&<div className="absolute right-0 pt-4 dropdown-menu   group-hover:block ">
                     <div className="flex flex-col rounded gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500">
                         <p className="cursor-pointer hover:text-black">My Profile</p>
                         <p className="cursor-pointer hover:text-black">Orders</p>
                         <p onClick={handleLogout}className="cursor-pointer hover:text-black">Logout</p>
                     </div>
 
-                </div>
+                </div>}
             </div>
             <Link to="/cart" className="relative ">
                 <img src={assets.cart_icon} alt="" className="w-5"/>
@@ -86,7 +88,7 @@ const handleLogout= async() => {
                 <Link className="py-3 px-6 border-b border-gray-400" to="/collection">COLLECTIONS</Link>
                 <Link className="py-3 px-6 border-b border-gray-400" to="/about">ABOUT</Link>
                 <Link className="py-3 px-6 border-b border-gray-400" to="/contact">CONTACT</Link>
-                 <Link className="py-3 px-6 border-b border-gray-400" to="/admin">ADMIN</Link>
+                 {user&& user.role==="ADMIN" &&<Link className="py-3 px-6 border-b border-gray-400" to="/admin">ADMIN</Link>}
             </div>
         </div>
     </div>

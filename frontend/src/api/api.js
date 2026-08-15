@@ -90,3 +90,45 @@ export const RegisterApi = async({username,email,password}) => {
     }
 
  }
+
+ export const GetMeApi = async() => {
+    try {
+        const response = await api.get("api/auth/me");
+        return response.data;
+    } catch(err) {
+        console.log("Session verification failed:", err?.response?.data?.message || err?.message);
+        
+    }
+ }
+
+ export const GetMyCartApi = async() => {
+    try {
+        const response = await api.get("api/cart/getMyCart");
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+       
+    }
+}
+
+export const AddToCartApi = async({itemId,size}) => {
+    try {
+        const response = await api.post("api/cart/addToCart",{itemId,size});
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+        
+    }
+}
+export const UpdateCartApi  = async({itemId,size,quantity}) => {
+    try {
+        const response = await api.post("api/cart/updateCart",{itemId,size,quantity});
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+

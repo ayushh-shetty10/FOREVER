@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react'
 //import { products } from '../assets/frontend_assets/assets';
 
-import { ListItemsApi } from '../api/api';
+import { ListItemsApi, GetMeApi, GetMyCartApi } from '../api/api';
 
 export const ShopContext=createContext();
 
@@ -12,6 +12,7 @@ export const ShopContextProvider = ({children}) => {
     const [search,setSearch]=useState("");
     const [cartItems,setCartItems]=useState({});
     const[user,setUser] = useState(null);
+    const [checkingAuth, setCheckingAuth] = useState(true);
     
     const [ loading,setLoading] = useState(false);
     const [list,setList] = useState([]);
@@ -83,14 +84,44 @@ export const ShopContextProvider = ({children}) => {
       }
     }
 
+    const checkUserSession = async () => {
+      try {
+        const res = await GetMeApi();
+        if (res?.user) {
+          setUser(res.user);
+        }
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
     useEffect(()=>{
       GetAllProducts();
+      checkUserSession();
     },[]);
 
-
+    useEffect(() => {
+      const fetchCart = async () => {
+        if (user) {
+          try {
+            const res = await GetMyCartApi();
+            if (res?.cartData) {
+              setCartItems(res.cartData);
+            }
+          } catch (err) {
+            console.log("Error fetching cart data:", err);
+          }
+        } else {
+          setCartItems({});
+        }
+      };
+      fetchCart();
+    }, [user]);
 
     const values={
-    products,currency,delivery_fee,search,setSearch,cartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,list,setList,user,setUser
+    products,currency,delivery_fee,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,list,setList,user,setUser,checkingAuth
      }
 
   return (
