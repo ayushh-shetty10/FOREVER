@@ -10,7 +10,7 @@ const PlaceOrder = () => {
   
   const [method,setMethod]= useState("cod");
   const navigate = useNavigate();
-  const {cartItems,setCartItems,products,GetCartAmount,delivery_fee,PlaceOrderCODFunc}=useShop();
+  const {cartItems,setCartItems,products,GetCartAmount,delivery_fee,PlaceOrderCODFunc,PlaceOrderStripeFunc}=useShop();
 
 
   const [formData,setFormData] = useState({
@@ -61,7 +61,7 @@ const PlaceOrder = () => {
         //if COD:
         case "cod":
             const response = await PlaceOrderCODFunc(orderData);
-            if(response.message==="Order placed (COD) successfully!"){
+            if(response && response.message==="Order placed (COD) successfully!"){
               setCartItems({});
               toast.success("Order Placed successfully!");
               navigate("/orders");
@@ -70,6 +70,12 @@ const PlaceOrder = () => {
         case "razorpay": 
         break;
         case "stripe": 
+          const responseStripe = await PlaceOrderStripeFunc(orderData);
+          if(responseStripe && responseStripe.message==="Order placed (Stripe) successfully!"){
+              const {session_url}=responseStripe;
+              window.location.replace(session_url);
+              
+          }
         break;
         default:
         break;
@@ -78,7 +84,7 @@ const PlaceOrder = () => {
     }
     catch(err){
       console.log(err);
-      toast.error(err.message);
+      
     }
   }
 

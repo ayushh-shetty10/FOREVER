@@ -174,5 +174,15 @@ export const UpdateOrderStatusApi = async({orderId, status}) => {
     }
 }
 
+export const PlaceOrderStripeApi = async(orderData)=> {
+    try{
+        const response = await api.post("api/orders/stripe",orderData);
+        return response.data;
+    }
+    catch(err){
+    toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
 
 
