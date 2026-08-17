@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const { authRouter } = require("./routes/authRoutes");
 const { productRouter } = require("./routes/productsRoutes");
 const { cartRouter } = require("./routes/cartRoutes");
+const { orderRouter } = require("./routes/orderRoutes");
 
 
 
@@ -26,6 +27,7 @@ app.use("/api/auth",authRouter);
 app.use("/api/product",productRouter);
 
 app.use("/api/cart",cartRouter);
+app.use("/api/orders",orderRouter);
 
 
 module.exports = {app};

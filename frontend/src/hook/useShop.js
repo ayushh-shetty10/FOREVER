@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { ShopContext } from "../context/ShopContext"
 import {toast} from "react-toastify"
 
-import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi} from "../api/api";
+import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi,PlaceOrderCodApi,GetUserOrdersApi, GetAllOrdersApi, UpdateOrderStatusApi} from "../api/api";
 
 export const useShop = () =>{
    
@@ -175,10 +175,59 @@ export const useShop = () =>{
         }
     }
 
+    const PlaceOrderCODFunc = async(orderData) => {
+        setLoading(true);
+        try{
+            const res = await PlaceOrderCodApi(orderData);
+            return res;
+        }
+        catch(err){
+            console.log(err);
+           
+        }
+        finally{
+            setLoading(false);
+        }
+    }
 
-   
+    const GetUserOrdersFunc = async() => {
+        setLoading(true);
+        try{
+            const res = await GetUserOrdersApi();
+            return res;
+        }
+        catch(err){
+            console.log(err);
+        }finally{
+            setLoading(false);
+        }
+    }
 
-    return {currency,delivery_fee,products,search,setSearch,cartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc};
+    const GetAllOrdersFunc = async() => {
+        setLoading(true);
+        try {
+            const res = await GetAllOrdersApi();
+            return res;
+        } catch(err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const UpdateOrderStatusFunc = async({orderId, status}) => {
+        setLoading(true);
+        try {
+            const res = await UpdateOrderStatusApi({orderId, status});
+            return res;
+        } catch(err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc,PlaceOrderCODFunc,GetUserOrdersFunc,GetAllOrdersFunc,UpdateOrderStatusFunc};
 
 
 }

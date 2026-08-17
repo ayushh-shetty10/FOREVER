@@ -78,7 +78,7 @@ export const RegisterApi = async({username,email,password}) => {
     }
 }
 
- export const LogoutApi = async() => {
+export const LogoutApi = async() => {
     try{
     const response = await api.post("api/auth/logout",{});
     console.log(response.data.message);
@@ -91,7 +91,7 @@ export const RegisterApi = async({username,email,password}) => {
 
  }
 
- export const GetMeApi = async() => {
+export const GetMeApi = async() => {
     try {
         const response = await api.get("api/auth/me");
         return response.data;
@@ -101,7 +101,7 @@ export const RegisterApi = async({username,email,password}) => {
     }
  }
 
- export const GetMyCartApi = async() => {
+export const GetMyCartApi = async() => {
     try {
         const response = await api.get("api/cart/getMyCart");
         return response.data;
@@ -131,4 +131,48 @@ export const UpdateCartApi  = async({itemId,size,quantity}) => {
         console.log(err);
     }
 }
+
+export const PlaceOrderCodApi = async(orderData) => {
+    try{
+        const response = await api.post("api/orders/place",orderData);
+        return response.data;
+    }
+    catch(err){
+    toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
+export const GetUserOrdersApi = async() => {
+    try {
+        const response = await api.get("api/orders/userorders");
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+       
+    }
+}
+
+export const GetAllOrdersApi = async() => {
+    try {
+        const response = await api.get("api/orders/list");
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
+export const UpdateOrderStatusApi = async({orderId, status}) => {
+    try {
+        const response = await api.post("api/orders/status", {orderId, status});
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
+
 
