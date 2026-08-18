@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { ShopContext } from "../context/ShopContext"
 import {toast} from "react-toastify"
 
-import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi,PlaceOrderCodApi,GetUserOrdersApi, GetAllOrdersApi, UpdateOrderStatusApi,PlaceOrderStripeApi} from "../api/api";
+import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi,PlaceOrderCodApi,GetUserOrdersApi, GetAllOrdersApi, UpdateOrderStatusApi,PlaceOrderStripeApi,PlaceOrderRazorpayApi,verifyRazorpayApi,markOrderFailedApi} from "../api/api";
 
 export const useShop = () =>{
    
@@ -242,7 +242,49 @@ export const useShop = () =>{
         }
     }
 
-    return {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc,PlaceOrderCODFunc,GetUserOrdersFunc,GetAllOrdersFunc,UpdateOrderStatusFunc,PlaceOrderStripeFunc};
+    const PlaceOrderRazorpayFunc = async(orderData)=> {
+        setLoading(true);
+        try{
+            const res = await PlaceOrderRazorpayApi(orderData);
+            return res;
+        }
+        catch(err){
+            console.log(err);
+           
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+
+    const VerifyRazorpayFunc = async(paymentData) => {
+        setLoading(true);
+        try{
+            const res = await verifyRazorpayApi(paymentData);
+            return res;
+        }
+        catch(err){
+            console.log(err);
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+
+    const MarkOrderFailedFunc = async(orderId) => {
+        setLoading(true);
+        try{
+            await markOrderFailedApi(orderId);
+        }
+        catch(err){
+            console.log(err);
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+
+    return {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc,PlaceOrderCODFunc,GetUserOrdersFunc,GetAllOrdersFunc,UpdateOrderStatusFunc,PlaceOrderStripeFunc,PlaceOrderRazorpayFunc,VerifyRazorpayFunc,MarkOrderFailedFunc};
 
 
 }

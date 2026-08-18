@@ -10,7 +10,7 @@ const PlaceOrder = () => {
   
   const [method,setMethod]= useState("cod");
   const navigate = useNavigate();
-  const {cartItems,setCartItems,products,GetCartAmount,delivery_fee,PlaceOrderCODFunc,PlaceOrderStripeFunc}=useShop();
+  const {cartItems,setCartItems,products,GetCartAmount,delivery_fee,PlaceOrderCODFunc,PlaceOrderStripeFunc,PlaceOrderRazorpayFunc,VerifyRazorpayFunc,MarkOrderFailedFunc}=useShop();
 
 
   const [formData,setFormData] = useState({
@@ -68,6 +68,46 @@ const PlaceOrder = () => {
             }
             break;
         case "razorpay": 
+          const responseRazorpay = await PlaceOrderRazorpayFunc(orderData);
+          if(responseRazorpay && responseRazorpay.message==="Order placed (Razorpay) successfully!"){
+            const {order}=responseRazorpay;
+            const options = {
+              "key":import.meta.env.VITE_RAZORPAY_API_KEY,
+              "amount":order.amount,
+              "currency":order.currency,
+              "order_id":order.id,
+              "name":"Forever",
+              "description":"Test Payment",
+              "receipt":order.receipt,
+              "image":assets.logo_light,
+              "handler":async function(response){
+               const verfiy = await VerifyRazorpayFunc(response);
+               if(verfiy && verfiy.success==true){
+               
+                setCartItems({});
+                navigate("/orders");
+               }
+              },
+              "modal": {
+                "ondismiss": async function() {
+                  await MarkOrderFailedFunc(order.receipt);
+                }
+              },
+              "prefill":{
+                "name":formData.firstName+" "+formData.lastName,
+                "email":formData.email,
+                "contact":formData.phone
+              },
+              "notes":{
+                "address":"test Address"
+              },
+              "theme":{
+                "color":"#3399ff"
+              }
+            }
+             const rzp2 = new window.Razorpay(options);
+             rzp2.open();
+          }
         break;
         case "stripe": 
           const responseStripe = await PlaceOrderStripeFunc(orderData);

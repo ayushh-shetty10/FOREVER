@@ -24,7 +24,7 @@ const ListOrders = () => {
 
   // Stats calculation
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status !== 'Delivered').length;
+  const pendingOrders = orders.filter(o => o.status !== 'Delivered' && o.status !== 'Failed').length;
   const completedOrders = orders.filter(o => o.status === 'Delivered').length;
   const totalRevenue = orders.reduce((sum, o) => sum + (o.payment ? o.amount : 0), 0);
 
@@ -83,6 +83,8 @@ const ListOrders = () => {
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Delivered':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Failed':
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
@@ -159,7 +161,7 @@ const ListOrders = () => {
 
       {/* Filter Tabs */}
       <div className="flex flex-row overflow-x-auto gap-1 border-b border-gray-200 pb-0.5 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-none">
-        {['All', 'Order Placed', 'Packing', 'Shipped', 'Out for Delivery', 'Delivered'].map((status) => (
+        {['All', 'Order Placed', 'Packing', 'Shipped', 'Out for Delivery', 'Delivered', 'Failed'].map((status) => (
           <button
             key={status}
             onClick={() => setFilterStatus(status)}
@@ -329,6 +331,7 @@ const ListOrders = () => {
                     <option value="Shipped">Shipped</option>
                     <option value="Out for Delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Failed">Failed</option>
                   </select>
                 </div>
               </div>

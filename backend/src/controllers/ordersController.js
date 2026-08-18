@@ -1,6 +1,8 @@
 const { orderModel } = require("../models/ordersModel");
 const { userModel } = require("../models/userModel");
 const Stripe = require("stripe");
+const razorpay = require("razorpay");
+const crypto = require("crypto");
 
 //global variables:
 const currency = "inr";
@@ -8,6 +10,11 @@ const delivery_fee = 5.00;
 
 //stripe initialization
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+const razorpayInstance = new razorpay({
+  key_id:process.env.RAZORPAY_API_KEY,
+  key_secret:process.env.RAZORPAY_KEY_SECRET
+})
 
 
 
@@ -113,8 +120,93 @@ const placeOrderStripe = async(req,res)=> {
   }
 };
 
-const placeOrderRazorpay = (req,res)=> {
+const placeOrderRazorpay =async (req,res)=> {
+  try{
+    const {items,address,amount} = req.body;
+  const userId=req.user.id;
+  
 
+  const newOrder = await orderModel.create({
+    userId,
+    items,
+    amount,
+    address,
+    paymentMethod:"Razorpay",
+    payment:false,
+    date:Date.now()
+  });
+
+    const options = {
+      amount : amount * 100,
+      currency : "INR",
+      receipt:newOrder._id.toString(),
+    }
+    await razorpayInstance.orders.create(options,(error,order)=>{
+      if(error){
+        console.log(error);
+        return res.status(400).json({
+          success:false,
+          message:"order creation failed!"
+        });
+      }
+      return res.status(201).json({
+        success:true,
+        message:"Order placed (Razorpay) successfully!",
+        order
+      });
+    });
+  }
+  catch(err){
+    console.log(err);
+    return res.status(404).json({
+      success:false,
+      message:"Failed to place order!"
+    });
+  }
+};
+
+const verifyRazorpay = async(req,res)=>{
+  try{
+    const {razorpay_order_id,razorpay_payment_id,razorpay_signature}=req.body;
+// console.log("razorpay_order_id",razorpay_order_id);
+// console.log("razorpay_payment_id",razorpay_payment_id);
+// console.log("razorpay_signature",razorpay_signature);
+
+    const sign = razorpay_order_id +"|" + razorpay_payment_id;
+
+    const expectedSign = crypto.createHmac("sha256",process.env.RAZORPAY_KEY_SECRET).update(sign.toString()).digest("hex");
+
+    if(expectedSign !== razorpay_signature){
+      return res.status(400).json({
+        success:false,
+        message:"Invalid signature!",
+      });
+    }
+
+    const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
+console.log(orderInfo);
+    if(orderInfo.status==="paid"){
+      await orderModel.findByIdAndUpdate(orderInfo.receipt  ,{payment:true});
+      await userModel.findByIdAndUpdate(req.user.id,{cartData:{}});
+    
+    return res.status(201).json({
+      success:true,
+      message: "Payment (Razorpay) successfull!",
+    });
+  }else{
+    return res.status(400).json({
+      success:false,
+      message: "Payment failed(Razorpay !",
+    });
+  }
+  }
+  catch(err){
+   console.log(err);
+    return res.status(404).json({
+      success:false,
+      message:"Failed to verify order!"
+    });
+  }
 };
 /**
  * @route GET:api/orders/list
@@ -166,7 +258,13 @@ const updateStatus = async (req,res)=> {
  */
 const userOrders = async(req,res)=> {
     try{
-        const userOrders =await orderModel.find({userId:req.user.id});
+        const userOrders =await orderModel.find({
+            userId:req.user.id,
+            $or: [
+                { payment: true },
+                { paymentMethod: "COD" }
+            ]
+        });
         
         return res.status(200).json({
             message:"orders fetched successfully",
@@ -183,4 +281,45 @@ const userOrders = async(req,res)=> {
 
 };
 
-module.exports={allOrders,updateStatus,placeOrderCOD,placeOrderRazorpay,placeOrderStripe,userOrders};
+const markFailed = async(req,res)=>{
+  try{
+    const {orderId} = req.body;
+    const order = await orderModel.findById(orderId);
+    if(!order){
+      return res.status(404).json({
+        success:false,
+        message:"Order not found!"
+      });
+    }
+
+    if (order.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success:false,
+        message:"Unauthorized action!"
+      });
+    }
+
+    if(order.payment === false && order.paymentMethod !== "COD"){
+      order.status = "Failed";
+      await order.save();
+      return res.status(200).json({
+        success:true,
+        message:"Order marked as failed successfully!"
+      });
+    }
+
+    return res.status(400).json({
+      success:false,
+      message:"Cannot mark paid or COD order as failed!"
+    });
+  }
+  catch(err){
+    console.log(err);
+    return res.status(500).json({
+      success:false,
+      message:"Failed to update order status!"
+    });
+  }
+};
+
+module.exports={allOrders,updateStatus,placeOrderCOD,placeOrderRazorpay,placeOrderStripe,userOrders,verifyRazorpay,markFailed};

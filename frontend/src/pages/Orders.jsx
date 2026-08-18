@@ -59,7 +59,7 @@ const Orders = () => {
             </div>
             <div className='md:w-1/2 flex justify-between '>
              <div className='flex items-center gap-2'>
-              <p className='min-w-2 h-2 rounded-full bg-green-500'></p>
+              <p className={`min-w-2 h-2 rounded-full ${item.status === 'Failed' ? 'bg-red-500' : 'bg-green-500'}`}></p>
               <p className='text-sm md:text-base'>{item.status}</p>
               </div>
               <button onClick={() => fetchOrder(true)} className='border px-4 py-2 text-sm font-medium rounded-sm hover:bg-gray-50 active:bg-gray-100 transition-colors'>Track Order</button>

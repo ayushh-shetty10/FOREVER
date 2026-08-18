@@ -185,4 +185,36 @@ export const PlaceOrderStripeApi = async(orderData)=> {
     }
 }
 
+export const PlaceOrderRazorpayApi = async(orderData)=>{
+    try{
+        const response = await api.post("api/orders/razorpay",orderData);
+        return response.data;
+    }
+    catch(err){
+    toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
+export const verifyRazorpayApi = async(paymentData) => {
+    try{
+        const response = await api.post("api/orders/verifyRazorpay",paymentData);
+        return response.data;
+    }
+    catch(err){
+    toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
+export const markOrderFailedApi = async(orderId) => {
+    try{
+        const response = await api.post("api/orders/markFailed",{orderId});
+        return response.data;
+    }
+    catch(err){
+        console.log(err);
+    }
+}
+
 
