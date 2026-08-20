@@ -217,4 +217,15 @@ export const markOrderFailedApi = async(orderId) => {
     }
 }
 
+export const verifyStripeApi = async(paymentData) => {
+    try{
+        const response = await api.post("api/orders/verifyStripe",paymentData);
+        return response.data;
+    }
+    catch(err){
+        toast.error(getApiErrorMessage(err));
+        console.log(err);
+    }
+}
+
 

@@ -98,12 +98,15 @@ const placeOrderStripe = async(req,res)=> {
   })
    
   const session = await stripe.checkout.sessions.create({
-    success_url:`${origin}/verify?success=true&orderId=${newOrder._id}`,
-    cancel_url:`${origin}/verify?success=false&orderId=${newOrder._id}`,
+    success_url:`${origin}/verify?success=true&orderId=${newOrder._id}&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:`${origin}/verify?success=false&orderId=${newOrder._id}&session_id={CHECKOUT_SESSION_ID}`,
     line_items,
     mode:'payment',
-    
+    metadata: {
+      orderId: newOrder._id.toString()
+    }
   });
+  // console.log(session);
 
   return res.status(201).json({
     success:true,
@@ -119,6 +122,59 @@ const placeOrderStripe = async(req,res)=> {
     });
   }
 };
+
+const verifyStripe = async (req, res) => {
+  try {
+    const { orderId, success, session_id } = req.body;
+    const userId = req.user.id;
+
+    if (success === "true" || success === true) {
+      if (!session_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Session ID is required for verification."
+        });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+
+      if (session.payment_status === 'paid' && session.metadata.orderId === orderId) {
+        await orderModel.findByIdAndUpdate(orderId, { payment: true });
+        await userModel.findByIdAndUpdate(userId, { cartData: {} });
+        return res.status(200).json({
+          success: true,
+          message: "Payment verified successfully!"
+        });
+      } else {
+        await orderModel.findByIdAndUpdate(orderId, { status: "Failed" });
+        return res.status(400).json({
+          success: false,
+          message: "Payment verification failed. Order marked as failed."
+        });
+      }
+    } else {
+      await orderModel.findByIdAndUpdate(orderId, { status: "Failed" });
+      return res.status(200).json({
+        success: false,
+        message: "Payment failed/cancelled. Order marked as failed."
+      });
+    }
+  }
+  catch (err) {
+    console.log(err);
+    try {
+      if (req.body.orderId) {
+        await orderModel.findByIdAndUpdate(req.body.orderId, { status: "Failed" });
+      }
+    } catch (dbErr) {
+      console.log("Failed to mark order as failed on error:", dbErr);
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify order!"
+    });
+  }
+}
 
 const placeOrderRazorpay =async (req,res)=> {
   try{
@@ -322,4 +378,4 @@ const markFailed = async(req,res)=>{
   }
 };
 
-module.exports={allOrders,updateStatus,placeOrderCOD,placeOrderRazorpay,placeOrderStripe,userOrders,verifyRazorpay,markFailed};
+module.exports={allOrders,updateStatus,placeOrderCOD,placeOrderRazorpay,placeOrderStripe,userOrders,verifyRazorpay,verifyStripe,markFailed};

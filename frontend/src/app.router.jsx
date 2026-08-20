@@ -12,6 +12,7 @@ import Navbar from "./components/Navbar.jsx"
 import Footer from "./components/Footer.jsx"
 import Admin from "./pages/Admin.jsx"
 import Protected from "./components/Protected.jsx"
+import Verify from "./pages/Verify.jsx"
 
 const RootLayout = () => (
     <>
@@ -65,6 +66,10 @@ export const router = createBrowserRouter([
             },{
                 path:"admin",
                 element:<Protected><Admin /></Protected> 
+            },
+            {
+                path:"verify",
+                element:<Protected><Verify /></Protected> 
             }
         ]
     }
