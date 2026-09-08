@@ -1,0 +1,7 @@
+272d1f3 stripe gateway integrated
+8eda9a6 added razorpay payment gateway
+7cce03d added stripe gateway
+1456d8b added order apis and integrated with the frontend
+cb59496 added cartAPIs and integratd with frontend
+bfa5f1e some minor changes done
+70f3728 created repo and initial commit

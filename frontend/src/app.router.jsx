@@ -1,4 +1,4 @@
-import { Outlet, createBrowserRouter } from "react-router-dom"
+import { Outlet, createBrowserRouter, ScrollRestoration } from "react-router-dom"
 import Home from "./pages/Home.jsx"
 import Collection from "./pages/Collection.jsx"
 import About from "./pages/About.jsx"
@@ -13,13 +13,15 @@ import Footer from "./components/Footer.jsx"
 import Admin from "./pages/Admin.jsx"
 import Protected from "./components/Protected.jsx"
 import Verify from "./pages/Verify.jsx"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const RootLayout = () => (
-    <>
+    <TooltipProvider>
         <Navbar />
         <Outlet />
         <Footer />
-    </>
+        <ScrollRestoration />
+    </TooltipProvider>
 )
 
 
@@ -63,15 +65,23 @@ export const router = createBrowserRouter([
             {
                 path: "orders",
                 element:<Protected><Orders /></Protected> 
-            },{
-                path:"admin",
-                element:<Protected><Admin /></Protected> 
             },
             {
                 path:"verify",
                 element:<Protected><Verify /></Protected> 
             }
         ]
+    },
+    {
+        path: "admin",
+        element: (
+            <TooltipProvider>
+                <Protected>
+                    <Admin />
+                </Protected>
+                <ScrollRestoration />
+            </TooltipProvider>
+        )
     }
 ]);
 

@@ -9,7 +9,7 @@ const cloudinary = require("cloudinary").v2;
  */
 const addProduct = async(req,res)=>{
   try{
-    const {name,description,price,category,subCategory,sizes,bestseller}= req.body;
+    const {name,description,price,category,subCategory,sizes,bestseller,totalStock}= req.body;
 
     const files = req.files || {};
     const images = [
@@ -37,6 +37,8 @@ const addProduct = async(req,res)=>{
             return result.secure_url;
   }))
 
+  const stockVal = totalStock !== undefined ? Number(totalStock) : 10;
+
   const product  = await productModel.create({
     name,
     description,
@@ -46,6 +48,9 @@ const addProduct = async(req,res)=>{
     sizes:JSON.parse(sizes),
     bestseller:bestseller==="true"?true:false,
     images:imagesUrl,
+    totalStock: stockVal,
+    reservedStock: 0,
+    availableStock: stockVal,
     date:Date.now()
   })
 
@@ -135,4 +140,48 @@ const getProduct = async(req,res)=>{
   }
 } 
 
-module.exports={addProduct,listProducts,removeProduct,getProduct};
+/**
+ * @router POST api/product/updateBestseller
+ * @description updates the bestseller boolean status of a product by ID.
+ */
+const updateBestseller = async (req, res) => {
+  try {
+    const { id, bestseller } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Product ID is required",
+      });
+    }
+
+    if (typeof bestseller !== "boolean") {
+      return res.status(400).json({
+        message: "Bestseller status must be a boolean",
+      });
+    }
+
+    const product = await productModel.findByIdAndUpdate(
+      id,
+      { bestseller },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Bestseller status updated successfully!",
+      product,
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({
+      message: "Error updating bestseller status",
+    });
+  }
+};
+
+module.exports={addProduct,listProducts,removeProduct,getProduct,updateBestseller};

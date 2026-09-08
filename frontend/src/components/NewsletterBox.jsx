@@ -1,19 +1,43 @@
 import React from 'react'
 
 const NewsletterBox = () => {
-    const handleSubSubmit = (e)=>{
-        e.preventDefault();
-    }
+  const handleSubSubmit = (e) => {
+    e.preventDefault()
+  }
+
   return (
-    <div className="text-center px-2">
-        <p className='text-2xl font-medium text-gray-800'>Subscribe Now and get 20% off!</p>
-        <p className="text-gray-400 mt-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Unde fugit quis hic veritatis impedit perferendis, recusandae fuga eligendi rem porro.
+    <section className="container-store mt-24 mb-16 font-sans">
+      <div className="max-w-2xl mx-auto text-center px-4 py-12 rounded-md bg-[#F1EDE6]/40 border border-border/20">
+        <span className="text-[10px] tracking-[0.25em] font-semibold text-primary uppercase">
+          Newsletter
+        </span>
+        <h2 className="font-display text-2xl sm:text-3xl text-foreground mt-1 tracking-wide">
+          Stay in the Know
+        </h2>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-md mx-auto font-light leading-relaxed">
+          Be the first to discover new arrivals, collections, and exclusive brand statements.
         </p>
-        <form onSubmit={handleSubSubmit}className="w-[90%] sm:w-1/2 flex items-center gap-3 mx-auto my-6 border pl-3">
-            <input type="email" placeholder='Enter your email' className="w-full sm:flex-1 outline-none"></input>
-            <button type="submit" className="bg-gray-700 text-white text-xs px-10 py-4 active:bg-gray-400 transition">SUBSCRIBE</button>
+
+        {/* Subscribe Form */}
+        <form 
+          onSubmit={handleSubSubmit}
+          className="flex flex-col sm:flex-row items-stretch gap-2.5 max-w-md mx-auto mt-8"
+        >
+          <input 
+            type="email" 
+            placeholder="Enter your email address" 
+            required
+            className="flex-1 px-4 py-3 text-xs bg-background border border-border rounded-xs focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+          <button 
+            type="submit" 
+            className="px-8 py-3 text-xs tracking-widest font-semibold text-white bg-primary hover:bg-primary/95 rounded-xs transition-colors duration-300 cursor-pointer uppercase outline-hidden"
+          >
+            Subscribe
+          </button>
         </form>
-    </div>
+      </div>
+    </section>
   )
 }
 

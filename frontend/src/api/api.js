@@ -44,6 +44,15 @@ export const ListItemsApi = async()=> {
     }
 }
 
+export const UpdateBestsellerApi = async ({ id, bestseller }) => {
+    try {
+        const response = await api.post("api/product/updateBestseller", { id, bestseller });
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+    }
+}
+
 export const RemoveItemApi = async ({_id})=> {
     try{
     const response = await api.post("api/product/removeProduct",{id:_id});

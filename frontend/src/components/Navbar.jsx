@@ -1,96 +1,288 @@
-import React, { useState } from 'react'
-import { assets } from '../assets/frontend_assets/assets'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useShop } from '../hook/useShop'
 import { toast } from 'react-toastify'
+import { assets } from '../assets/frontend_assets/assets'
+import { Search, User, ShoppingBag, Menu } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 const Navbar = () => {
-     const [visible,setVisible] = useState(false);
-     const [showLogout,setShowLogout] = useState(false);
-     const {GetCartCount,LogoutFunc,setUser,user} = useShop();
-     const navigate=useNavigate();
-     
-const handleLogout= async() => {
-    try{
-        const response = await LogoutFunc();
-        if(response.message==="User logged out successfully!"){
-            toast("Logout Successfull!");
-            setUser(null);
-            setShowLogout(false);
-            navigate("/login");
-        }else{
-            toast.error(response.message);
-        }
-    }catch(err){
-        console.log(err+"Failed to Logout");
+  const [isScrolled, setIsScrolled] = useState(false)
+  const { GetCartCount, LogoutFunc, setUser, user } = useShop()
+  const navigate = useNavigate()
+  const location = useLocation()
 
+  // Track scroll position to update sticky styling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
     }
-}
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
+  const handleLogout = async () => {
+    try {
+      const response = await LogoutFunc()
+      if (response.message === "User logged out successfully!") {
+        toast("Logout Successful!")
+        setUser(null)
+        navigate("/login")
+      } else {
+        toast.error(response.message)
+      }
+    } catch (err) {
+      console.log(err + " Failed to Logout")
+    }
+  }
+
+  const navLinks = [
+    { name: 'HOME', path: '/' },
+    { name: 'COLLECTIONS', path: '/collection' },
+    { name: 'ABOUT', path: '/about' },
+    { name: 'CONTACT', path: '/contact' },
+  ]
+
+  // Add Admin option if logged-in user is an administrator
+  if (user && user.role === "ADMIN") {
+    navLinks.push({ name: 'ADMIN', path: '/admin' })
+  }
+
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/'
+    }
+    return location.pathname.startsWith(path)
+  }
 
   return (
-    <div className="flex items-center justify-between py-5 px-2 font-medium ">
-       <Link to="/" ><img src={assets.logo} className="w-36" alt="" /></Link>
+    <div className="w-full flex flex-col font-sans">
+      {/* Announcement Bar */}
+      <AnimatePresence>
+        {!isScrolled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="w-full bg-foreground text-background py-1.5 text-center text-[10px] tracking-[0.18em] font-medium uppercase overflow-hidden"
+          >
+            Complimentary standard shipping on all orders
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
-            <Link to="/" className="flex flex-col items-center gap-1" >
-                <p>HOME</p>
-                <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden "/>
-            </Link>
-             <Link to="/collection" className="flex flex-col items-center gap-1" >
-                <p>COLLECTIONS</p>
-                <hr className="w-2/4 border-none bg-gray-700 h-[1.5px] hidden "/>
-            </Link>
-             <Link to="/about" className="flex flex-col items-center gap-1" >
-                <p>ABOUT</p>
-                <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden"/>
-            </Link>
-            <Link to="/contact" className="flex flex-col items-center gap-1" >
-                <p>CONTACT</p>
-                <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden"/>
-            </Link>
-            {user && user.role==="ADMIN" &&<Link to="/admin" className="flex flex-col items-center gap-1" >
-                <p>ADMIN</p>
-                <hr className="w-2/4 border-none bg-gray-700 h-[1.5px]  hidden"/>
-            </Link>}
-        </ul>
+      {/* Main Sticky Header */}
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          isScrolled
+            ? 'bg-background/90 backdrop-blur-md shadow-subtle border-b border-border/40 py-3'
+            : 'bg-background py-5'
+        }`}
+      >
+        <div className="container-store flex items-center justify-between">
+          {/* Brand/Logo Section */}
+          <Link to="/" className="flex items-center outline-hidden">
+            <img src={assets.logo} className="w-28 sm:w-32 transition-all" alt="Forever Logo" />
+          </Link>
 
-        <div className="flex items-center z-1 gap-6">
-            <img src={assets.search_icon} alt="" className="w-5 cursor-pointer"/>
-            <div className="group relative">
-               <img onClick={()=>{user? setShowLogout(!showLogout): navigate("/login")}} src={assets.profile_icon} alt="" className="w-5 cursor-pointer"/>
-                {user && showLogout &&<div className="absolute right-0 pt-4 dropdown-menu   group-hover:block ">
-                    <div className="flex flex-col rounded gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500">
-                        <p className="cursor-pointer hover:text-black">My Profile</p>
-                        <p className="cursor-pointer hover:text-black">Orders</p>
-                        <p onClick={handleLogout}className="cursor-pointer hover:text-black">Logout</p>
-                    </div>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden sm:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`relative text-xs tracking-[0.2em] font-medium py-1 hover:text-primary transition-colors outline-hidden ${
+                  isActive(link.path) ? 'text-primary' : 'text-muted-foreground'
+                }`}
+              >
+                {link.name}
+                {isActive(link.path) && (
+                  <motion.div
+                    layoutId="activeNavLine"
+                    className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-primary"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </Link>
+            ))}
+          </nav>
 
-                </div>}
-            </div>
-            <Link to="/cart" className="relative ">
-                <img src={assets.cart_icon} alt="" className="w-5"/>
-                <p className="absolute -right-1.25 -bottom-1.25 w-4 rounded-full aspect-square leading-4 text-center text-white text-[8px] bg-black">{GetCartCount()}</p>
-            </Link>
-            <img onClick={()=>{setVisible(true)}} src={assets.menu_icon} className='w-5 cursor-pointer  sm:hidden' alt="" />
-        </div>
-            {/* <div className={ `absolute ${visible?"block":"hidden" }top-0 bottom-0 right-0 blur-2xl bg-amber-400 h-full w-full z-0 sm:hidden`}></div> */}
-         {visible ? (<div onClick={()=>setVisible(false)}  className=" h-screen w-screen fixed z-1 bg-blue-300 blur-2xl top-0 left-0 "></div>) : ("")}
+          {/* Action Icons Section */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Search Icon */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => navigate('/collection')}
+                  className="p-2 rounded-full hover:bg-muted text-foreground transition-colors cursor-pointer outline-hidden"
+                  aria-label="Search Catalog"
+                >
+                  <Search className="size-4.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Search</TooltipContent>
+            </Tooltip>
 
-        {/* sidebar menu for small screens */}
-        <div  className={`absolute top-0 right-0 bottom-0 z-2 ${visible? "w-[80%]" : "w-0"} bg-white transition-all  `}>
-            <div className="flex flex-col text-gray-600">
-                <div onClick={()=>setVisible(false)} className="flex items-center gap-4 p-3">
-                    <img src={assets.dropdown_icon} className="rotate-180 h-4 text-black " alt=""/>
-                    <p>Back</p>
+            {/* Profile Dropdown */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 rounded-full hover:bg-muted text-foreground transition-colors cursor-pointer outline-hidden"
+                    aria-label="User Account"
+                  >
+                    <User className="size-4.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white border border-border rounded-md shadow-md p-1 font-sans">
+                  <DropdownMenuLabel className="px-2 py-1.5 text-xs text-muted-foreground font-medium">
+                    Signed in as <span className="font-semibold text-foreground truncate block">{user.username || user.email}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="cursor-pointer w-full text-left block text-sm px-2 py-1.5 rounded-sm hover:bg-muted transition-colors">
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer w-full text-left block text-sm px-2 py-1.5 rounded-sm transition-colors"
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="p-2 rounded-full hover:bg-muted text-foreground transition-colors cursor-pointer outline-hidden"
+                    aria-label="Login"
+                  >
+                    <User className="size-4.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Login</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Cart Link */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/cart"
+                  className="relative p-2 rounded-full hover:bg-muted text-foreground transition-colors outline-hidden"
+                  aria-label="Shopping Cart"
+                >
+                  <ShoppingBag className="size-4.5" />
+                  {GetCartCount() > 0 && (
+                    <motion.span
+                      key={GetCartCount()}
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="absolute top-1.5 right-1.5 size-4.5 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center translate-x-1/4 -translate-y-1/4"
+                    >
+                      {GetCartCount()}
+                    </motion.span>
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>Cart</TooltipContent>
+            </Tooltip>
+
+            {/* Mobile Sheet Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <button
+                  className="p-2 rounded-full hover:bg-muted text-foreground transition-colors sm:hidden cursor-pointer outline-hidden"
+                  aria-label="Toggle Navigation Drawer"
+                >
+                  <Menu className="size-4.5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[80vw] sm:max-w-xs bg-background border-l border-border p-6 flex flex-col justify-between font-sans">
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center justify-between border-b border-border pb-4">
+                    <span className="font-display text-lg tracking-widest text-foreground">FOREVER</span>
+                  </div>
+                  <nav className="flex flex-col gap-4">
+                    {navLinks.map((link) => (
+                      <SheetClose asChild key={link.name}>
+                        <Link
+                          to={link.path}
+                          className={`text-xs tracking-[0.2em] font-medium py-2 border-b border-border/40 hover:text-primary transition-colors ${
+                            isActive(link.path) ? 'text-primary' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </nav>
                 </div>
-                <Link className="py-3 px-6 border-b border-gray-400" to="/">HOME</Link>
-                <Link className="py-3 px-6 border-b border-gray-400" to="/collection">COLLECTIONS</Link>
-                <Link className="py-3 px-6 border-b border-gray-400" to="/about">ABOUT</Link>
-                <Link className="py-3 px-6 border-b border-gray-400" to="/contact">CONTACT</Link>
-                 {user&& user.role==="ADMIN" &&<Link className="py-3 px-6 border-b border-gray-400" to="/admin">ADMIN</Link>}
-            </div>
+
+                <div className="border-t border-border pt-4 mt-auto flex flex-col gap-4">
+                  {user ? (
+                    <>
+                      <div className="flex flex-col gap-1 px-1">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Signed in as</span>
+                        <span className="text-xs font-semibold text-foreground truncate block">{user.username || user.email}</span>
+                      </div>
+                      <SheetClose asChild>
+                        <Link to="/orders" className="text-xs uppercase tracking-widest font-medium py-2 hover:text-primary transition-colors">
+                          My Orders
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <button
+                          onClick={handleLogout}
+                          className="text-xs uppercase tracking-widest font-medium py-2 text-destructive hover:text-destructive/80 transition-colors text-left cursor-pointer"
+                        >
+                          Logout
+                        </button>
+                      </SheetClose>
+                    </>
+                  ) : (
+                    <SheetClose asChild>
+                      <Link
+                        to="/login"
+                        className="w-full py-2.5 rounded-md bg-primary text-primary-foreground font-medium text-center hover:bg-primary/95 transition-colors block text-xs tracking-widest uppercase"
+                      >
+                        Login
+                      </Link>
+                    </SheetClose>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
+      </header>
     </div>
   )
 }

@@ -1,38 +1,114 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { assets } from '../assets/frontend_assets/assets'
+import { Mail, Phone, MapPin } from 'lucide-react'
+import { FaInstagram, FaFacebookF, FaTwitter } from 'react-icons/fa'
 
 const Footer = () => {
   return (
-    <div className="px-10 sm:px-20  ">
-      
-      <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 mb-10 mt-20 text-sm">
+    <footer className="bg-foreground text-background/80 font-sans mt-24">
+      {/* Top Footer Section */}
+      <div className="container-store section-padding grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
         
-        <div>
-          <img src={assets.logo} alt="" className="w-36 mb-5"></img>
-          <p className="text-gray-600  w-full sm:w-2/3  ">Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore accusantium sint harum deleniti perspiciatis facilis ducimus quisquam veniam? Nam praesentium veritatis, soluta aut tenetur voluptatem aliquid repellat earum eligendi nulla!</p>
+        {/* Brand Information */}
+        <div className="flex flex-col gap-5">
+          <Link to="/" className="outline-hidden">
+            <img 
+              src={assets.logo} 
+              alt="Forever Logo" 
+              className="w-32 invert opacity-95 hover:opacity-100 transition-opacity" 
+            />
+          </Link>
+          <p className="text-xs leading-relaxed text-background/70 max-w-sm font-sans tracking-wide">
+            An editorial collection of modern Indian luxury fashion. Curating the finest textiles and contemporary designs for the modern wardrobe.
+          </p>
         </div>
-        <div >
-          <p className="text-xl mb-5 font-medium">COMPANY</p>
-          <ul className="flex flex-col text-gray-600 gap-1 ">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About Us</a></li>
-            <li>Delivery</li>
-            <li>Privacy Policy</li>
+
+        {/* Company Links */}
+        <div className="flex flex-col gap-5">
+          <h4 className="text-xs font-semibold tracking-[0.2em] text-background uppercase">
+            Company
+          </h4>
+          <ul className="flex flex-col gap-3 text-xs tracking-wider font-light">
+            <li>
+              <Link to="/" className="hover:text-[#C6A15B] transition-colors outline-hidden">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-[#C6A15B] transition-colors outline-hidden">
+                About Us
+              </Link>
+            </li>
+            <li className="hover:text-[#C6A15B] transition-colors cursor-default">
+              Delivery Information
+            </li>
+            <li className="hover:text-[#C6A15B] transition-colors cursor-default">
+              Privacy Policy
+            </li>
           </ul>
         </div>
-        <div >
-          <p className="text-xl mb-5 font-medium">GET IN TOUCH</p>
-          <ul className="flex flex-col text-gray-600 gap-1 ">
-            <li>+91-9845695247</li>
-            <li>radom@gmail.com</li>
-            <li>Lorem ipsum,Bheem ke ghar ke samne, Dholakpur,Bangalore. </li>
+
+        {/* Contact Information */}
+        <div className="flex flex-col gap-5">
+          <h4 className="text-xs font-semibold tracking-[0.2em] text-background uppercase">
+            Get In Touch
+          </h4>
+          <ul className="flex flex-col gap-3 text-xs tracking-wider font-light">
+            <li className="flex items-center gap-2">
+              <Phone className="size-3.5 text-[#C6A15B]" />
+              <span>+91-9845695247</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="size-3.5 text-[#C6A15B]" />
+              <span>support@forever.com</span>
+            </li>
+            <li className="flex items-start gap-2 max-w-xs leading-relaxed">
+              <MapPin className="size-3.5 text-[#C6A15B] shrink-0 mt-0.5" />
+              <span>Lorem ipsum, Bheem ke ghar ke samne, Dholakpur, Bangalore.</span>
+            </li>
           </ul>
         </div>
       </div>
 
-      <hr></hr>
-      <p className="py-5 text-sm text-center">Copyright 2026@ forever.com-ALL RIGHTS RESERVED.</p>
-    </div>
+      {/* Bottom Footer Section */}
+      <div className="border-t border-background/10 py-6">
+        <div className="container-store flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] tracking-widest uppercase font-medium">
+          {/* Copyright */}
+          <p className="text-background/50">
+            &copy; {new Date().getFullYear()} FOREVER. ALL RIGHTS RESERVED.
+          </p>
+
+          {/* Social Links (Visually Prepared/Placeholder) */}
+          <div className="flex items-center gap-4">
+            <a 
+              href="#" 
+              onClick={(e) => e.preventDefault()} 
+              className="text-background/50 hover:text-[#C6A15B] transition-colors outline-hidden" 
+              aria-label="Instagram"
+            >
+              <FaInstagram className="size-4" />
+            </a>
+            <a 
+              href="#" 
+              onClick={(e) => e.preventDefault()} 
+              className="text-background/50 hover:text-[#C6A15B] transition-colors outline-hidden" 
+              aria-label="Facebook"
+            >
+              <FaFacebookF className="size-3.5" />
+            </a>
+            <a 
+              href="#" 
+              onClick={(e) => e.preventDefault()} 
+              className="text-background/50 hover:text-[#C6A15B] transition-colors outline-hidden" 
+              aria-label="Twitter"
+            >
+              <FaTwitter className="size-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   )
 }
 

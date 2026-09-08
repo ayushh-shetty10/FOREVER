@@ -1,84 +1,191 @@
 import React, { useEffect, useState } from 'react'
 import { useShop } from '../hook/useShop'
-import Title from '../components/Title';
-import { assets } from '../assets/frontend_assets/assets';
-import CartTotal from '../components/CartTotal';
-import { useNavigate } from 'react-router-dom';
+import CartTotal from '../components/CartTotal'
+import ProductPrice from '../components/product/ProductPrice'
+import { useNavigate, Link } from 'react-router-dom'
+import { Trash2, ShoppingBag } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
 
 const Cart = () => {
+  const { products, cartItems, UpdateCartFunc, GetCartCount } = useShop()
+  const [cartData, setCartData] = useState([])
+  const navigate = useNavigate()
 
-    const {products,currency,cartItems,UpdateCartFunc}=useShop();
-    const [cartData,setCartData]=useState([]);
-    const navigate = useNavigate();
-
-    useEffect(()=>{
-      let tempData = [];
-      for(const item in cartItems){
-        for(const size in cartItems[item]){
-          if(cartItems[item][size]>0){
-            tempData.push({
-              _id:item,
-              size:size,
-              quantity:cartItems[item][size],
-
-            })
-          }
-        }
-      }
-       setCartData(tempData);
-    },[cartItems]);
-
-  return (
-    <div className='border-t pt-14 px-5'>
-      <div className='text-2xl mb-3 '>
-        <Title text1={'YOUR'} text2={'CART'}></Title>
-      </div>
-
-      <div>
-        {
-          cartData.map((item,index)=>{
-            const productData=products.find((product)=>product._id===item._id);
-
-            return(
-              <div key={index} className='py-4 border-t text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4 '>
-                <div className='flex items-start gap-6'>
-                  <img src={productData.images[0]} className='w-16 sm:w-20' alt="" />
-                  <div className='flex flex-col gap-2 text-sm'>
-                    <p className='text-xs sm:text-lg font-medium'>{productData.name}</p>
-                    <div className='flex items-center gap-5 mt-2 '>
-                         <p> {item.size}</p>
-
-                         <p className='px-2 sm:px-3 sm:py-1 border bg-slate-50 '>{currency}{productData.price}</p>
-                    </div>
-                   
-                  </div>
-
-
-                </div>
-
-                
-                <input type="number"  onChange={(e)=>e.target.value==="" || e.target.value==="0" ?null:UpdateCartFunc(item._id,item.size,Number(e.target.value))} min={1} defaultValue={item.quantity} className='max-w-10 border sm:max-w-20 px-1 sm:px-2 sm:py-1 '/>
-                  
-                <img onClick={()=>{UpdateCartFunc(item._id,item.size,0)}} src={assets.bin_icon} alt="" className='w-4 cursor-pointer sm:w-5 mr-4'/>
-
-              </div>
-            )
+  useEffect(() => {
+    let tempData = []
+    for (const item in cartItems) {
+      for (const size in cartItems[item]) {
+        if (cartItems[item][size] > 0) {
+          tempData.push({
+            _id: item,
+            size: size,
+            quantity: cartItems[item][size]
           })
         }
+      }
+    }
+    setCartData(tempData)
+  }, [cartItems])
+
+  const handleQtyChange = (itemId, size, val) => {
+    if (val < 1) return
+    UpdateCartFunc(itemId, size, val)
+  }
+
+  const handleRemoveItem = (itemId, size) => {
+    UpdateCartFunc(itemId, size, 0)
+  }
+
+  if (cartData.length === 0) {
+    return (
+      <div className="container-store py-16 min-h-[70vh] flex flex-col items-center justify-center text-center font-sans">
+        <div className="size-16 rounded-full bg-muted flex items-center justify-center text-primary/80 mb-6 select-none">
+          <ShoppingBag className="size-8" />
+        </div>
+        <h2 className="text-2xl font-display text-foreground uppercase tracking-widest mb-3">Your bag is empty</h2>
+        <p className="text-xs text-muted-foreground max-w-xs leading-relaxed mb-8 select-none">
+          Discover the timeless elegance of handcrafted Banarasi, Kanjivaram and Organza sarees. Add your favorites to start your styling story.
+        </p>
+        <Link 
+          to="/collection" 
+          className="px-8 py-3 bg-primary hover:bg-[#591621] text-primary-foreground text-xs uppercase tracking-widest font-sans font-medium rounded-xs shadow-subtle hover:shadow-elevated transition-all duration-300 active:scale-[0.98] select-none"
+        >
+          Explore Collection
+        </Link>
       </div>
-      <div className='flex justify-end my-20'>
-        <div className='w-full sm:w-[450px]'>
-          <CartTotal />
-          <div className='w-full text-end' >
-            <button onClick={()=>navigate("/place-order")} className="px-8 py-3 my-8 text-sm bg-black text-white active:bg-gray-700 ">PROCEED TO CHECKOUT</button>
+    )
+  }
+
+  const totalItems = GetCartCount()
+
+  return (
+    <div className="container-store py-8 min-h-screen font-sans">
+      {/* Breadcrumb Section */}
+      <div className="flex gap-2 items-center text-xs tracking-wider text-muted-foreground uppercase mb-6 select-none">
+        <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+        <span>/</span>
+        <span className="text-foreground font-medium">Shopping Bag</span>
+      </div>
+
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-border/40 gap-4">
+        <div>
+          <h1 className="text-h2 font-display text-foreground tracking-normal uppercase">Your Shopping Bag</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Review your premium selections ({totalItems} {totalItems === 1 ? 'item' : 'items'})
+          </p>
+        </div>
+      </div>
+
+      {/* Main Responsive Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left Column: Cart Items List */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          {cartData.map((item, index) => {
+            const productData = products.find((product) => product._id === item._id)
+            if (!productData) return null
+
+            return (
+              <div 
+                key={`${item._id}-${item.size}-${index}`}
+                className="flex items-start justify-between gap-4 p-4 bg-card/40 border border-border/50 rounded-md hover:border-border transition-colors duration-300"
+              >
+                {/* Product Thumbnail and details block */}
+                <div className="flex gap-4">
+                  {/* Aspect Ratio 3:4 Box */}
+                  <div className="w-20 md:w-24 aspect-[3/4] shrink-0 bg-muted rounded-sm overflow-hidden border border-border/10">
+                    <img 
+                      src={productData.images[0]} 
+                      alt={productData.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex flex-col justify-between">
+                    <div>
+                      {/* Name */}
+                      <h3 className="text-sm font-medium text-foreground tracking-wide mb-1.5 md:text-base">
+                        {productData.name}
+                      </h3>
+                      {/* Category metadata */}
+                      <p className="text-[10px] text-[#C6A15B] font-semibold tracking-wider uppercase mb-3">
+                        {productData.category} &bull; {productData.subCategory}
+                      </p>
+                      {/* Size tag */}
+                      <div className="inline-block bg-muted/60 text-muted-foreground text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-xs select-none">
+                        SIZE: {item.size}
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="mt-3">
+                      <ProductPrice price={productData.price} className="text-sm text-foreground font-semibold" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Steppers & actions */}
+                <div className="flex flex-col items-end justify-between h-full min-h-[90px] min-w-[100px]">
+                  {/* Trash action */}
+                  <button 
+                    onClick={() => handleRemoveItem(item._id, item.size)}
+                    type="button" 
+                    className="p-1 text-muted-foreground/80 hover:text-destructive transition-colors cursor-pointer"
+                    aria-label="Remove item"
+                  >
+                    <Trash2 className="size-[18px]" />
+                  </button>
+
+                  {/* Quantity Stepper */}
+                  <div className="flex items-center border border-border/60 rounded-xs bg-[#FAF8F4] h-9 select-none overflow-hidden scale-90 md:scale-100">
+                    <button
+                      onClick={() => handleQtyChange(item._id, item.size, item.quantity - 1)}
+                      type="button"
+                      disabled={item.quantity <= 1}
+                      className="px-3 h-full text-md font-light text-muted-foreground hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      &minus;
+                    </button>
+                    <span className="w-8 text-center text-xs font-semibold text-foreground">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => handleQtyChange(item._id, item.size, item.quantity + 1)}
+                      type="button"
+                      className="px-3 h-full text-md font-light text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Right Column: Order Summary card */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-28 bg-[#F1EDE6]/30 border border-border/40 p-6 rounded-md">
+            <CartTotal showTitle={true} />
+            
+            <Separator className="bg-border/60 my-6" />
+
+            <button
+              onClick={() => navigate('/place-order')}
+              type="button"
+              className="w-full h-12 bg-primary hover:bg-[#591621] text-primary-foreground text-xs uppercase tracking-widest font-sans font-medium rounded-xs shadow-subtle hover:shadow-elevated transition-all duration-300 flex items-center justify-center cursor-pointer active:scale-[0.98]"
+            >
+              Proceed to checkout
+            </button>
+            
+            <p className="text-[10px] text-muted-foreground font-sans font-light leading-relaxed mt-4 text-center">
+              Shipping & taxes calculated at checkout. Safe and secure checkout guaranteed.
+            </p>
           </div>
         </div>
-      
       </div>
-       
     </div>
   )
 }
-
 
 export default Cart

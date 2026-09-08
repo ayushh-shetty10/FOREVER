@@ -1,37 +1,44 @@
-import React, { useEffect,useState } from "react";
-import { useShop } from "../hook/useShop";
-import Title from "./Title";
-import ProductItem from "./ProductItem.jsx";
+import React, { useEffect, useState } from "react"
+import { useShop } from "../hook/useShop"
+import ProductGrid from "./product/ProductGrid"
 
 const BestSellers = () => {
-  const { products } = useShop();
-  const [bestProducts,setBestProducts]=useState([]);
- 
-  useEffect(()=>{
-    const bestProduct=products.filter((item)=>(item.bestseller));
-    setBestProducts(bestProduct.slice(0,5));
-  },[products]);
+  const { products, loading } = useShop()
+  const [bestProducts, setBestProducts] = useState([])
 
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const bestProduct = products.filter((item) => item.bestseller)
+      setBestProducts(bestProduct.slice(0, 5))
+    }
+  }, [products])
+
+  // Hide the section if there are genuinely no bestseller products
+  if (!loading && bestProducts.length === 0) return null
 
   return (
-  // TITLE for BestProducts
-    <div className="my-10 px-2">
-      <div className="text-center py-8 text-3xl">
-        <Title text1={"BEST"} text2={"SELLERS"} />
-        <p className="w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600"> Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus soluta vero doloremque voluptatem alias, a blanditiis, possimus.</p>
+    <section className="container-store mt-24 font-sans">
+      {/* Section Header */}
+      <div className="text-center mb-10">
+        <span className="text-[10px] tracking-[0.25em] font-semibold text-primary uppercase">
+          Curated Favourites
+        </span>
+        <h2 className="font-display text-2xl sm:text-3xl tracking-widest text-foreground uppercase mt-1">
+          Bestsellers
+        </h2>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-sm mx-auto font-light leading-relaxed">
+          Pieces our customers keep coming back to.
+        </p>
       </div>
 
-          {/*  list latest products: */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-    {bestProducts.map((product)=>(
-      
-        <ProductItem key={product._id}name={product.name} id={product._id} image={product.images} price={product.price}></ProductItem>
-      
-    )
-    )}
-    </div>
-    </div>
-
+      {/* Product Grid Integration */}
+      <ProductGrid 
+        products={bestProducts} 
+        isLoading={loading && bestProducts.length === 0} 
+        skeletonCount={5}
+        columnsClassName="grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+      />
+    </section>
   )
 }
 

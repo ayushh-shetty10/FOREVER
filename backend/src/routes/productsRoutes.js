@@ -1,6 +1,6 @@
 const express = require("express");
 const { upload } = require("../middlewares/multer");
-const { addProduct, listProducts, removeProduct,getProduct } = require("../controllers/productControllers");
+const { addProduct, listProducts, removeProduct, getProduct, updateBestseller } = require("../controllers/productControllers");
 const { authMiddle, adminOnly } = require("../middlewares/authMiddlewear");
 
 const productRouter = express.Router();
@@ -9,5 +9,6 @@ productRouter.post("/addProduct",upload.fields([{name:"image1",maxCount:1},{name
  productRouter.get("/listProducts",listProducts);
  productRouter.post("/removeProduct",authMiddle,adminOnly,removeProduct);
  productRouter.post("/getProductInfo",getProduct);
+ productRouter.post("/updateBestseller",authMiddle,adminOnly,updateBestseller);
 
 module.exports = {productRouter};

@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { ShopContext } from "../context/ShopContext"
 import {toast} from "react-toastify"
 
-import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi,PlaceOrderCodApi,GetUserOrdersApi, GetAllOrdersApi, UpdateOrderStatusApi,PlaceOrderStripeApi,PlaceOrderRazorpayApi,verifyRazorpayApi,verifyStripeApi,markOrderFailedApi} from "../api/api";
+import { AddItemApi, ListItemsApi, RegisterApi, RemoveItemApi ,LoginApi,LogoutApi, AddToCartApi, UpdateCartApi, GetMyCartApi,PlaceOrderCodApi,GetUserOrdersApi, GetAllOrdersApi, UpdateOrderStatusApi,PlaceOrderStripeApi,PlaceOrderRazorpayApi,verifyRazorpayApi,verifyStripeApi,markOrderFailedApi, UpdateBestsellerApi } from "../api/api";
 
 export const useShop = () =>{
    
@@ -136,6 +136,7 @@ export const useShop = () =>{
             const response = await AddToCartApi({ itemId, size });
             if (response) {
                 AddToCart(itemId, size);
+                toast.success("Added to bag");
             }
             return response;
         } catch (err) {
@@ -298,7 +299,19 @@ export const useShop = () =>{
         }
     }
 
-    return {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc,PlaceOrderCODFunc,GetUserOrdersFunc,GetAllOrdersFunc,UpdateOrderStatusFunc,PlaceOrderStripeFunc,PlaceOrderRazorpayFunc,VerifyRazorpayFunc,VerifyStripeFunc,MarkOrderFailedFunc};
+    const UpdateBestsellerFunc = async ({ id, bestseller }) => {
+        setLoading(true);
+        try {
+            const res = await UpdateBestsellerApi({ id, bestseller });
+            return res;
+        } catch(err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return {currency,delivery_fee,products,search,setSearch,cartItems,setCartItems,AddToCart,GetCartCount,UpdateQuantity,GetCartAmount, loading,setLoading,user,setUser,AddItemFunc,ListItemsFunc,list,setList,RemoveItemFunc,LoginFunc,RegisterFunc,LogoutFunc,checkingAuth,AddToCartFunc,UpdateCartFunc,GetMyCartFunc,PlaceOrderCODFunc,GetUserOrdersFunc,GetAllOrdersFunc,UpdateOrderStatusFunc,PlaceOrderStripeFunc,PlaceOrderRazorpayFunc,VerifyRazorpayFunc,VerifyStripeFunc,MarkOrderFailedFunc,UpdateBestsellerFunc};
 
 
 }
