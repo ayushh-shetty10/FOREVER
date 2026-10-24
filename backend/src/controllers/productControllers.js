@@ -77,14 +77,14 @@ const listProducts = async(req,res)=>{
     const products = await productModel.find({});
     
 
-    return res.status(203).json({
+    return res.status(200).json({
         message:"Products fetched successfully",
         success:true,
         products,
     })
   }catch(error){
     console.log(error.message);
-    return res.status(403).json({
+    return res.status(500).json({
       message:"Error fetching products",
     })
   }
@@ -104,12 +104,12 @@ const removeProduct = async(req,res)=>{
     })
    }
 
-    return res.status(203).json({
+    return res.status(200).json({
       message:"Product removed successfully",
     })
   }catch(error){
     console.log(error.message);
-    return res.status(403).json({
+    return res.status(500).json({
       message:"Error removing product",
     })
   }
@@ -128,13 +128,13 @@ const getProduct = async(req,res)=>{
         message:"Product not found",
       })
     }
-    return res.status(203).json({
+    return res.status(200).json({
       message:"product fetched successfully",
       product
     })
   }catch(error){
     console.log(error.message);
-    return res.status(403).json({
+    return res.status(500).json({
       message:"Error fetching product details",
     })
   }
@@ -184,4 +184,95 @@ const updateBestseller = async (req, res) => {
   }
 };
 
-module.exports={addProduct,listProducts,removeProduct,getProduct,updateBestseller};
+/**
+ * @router POST api/product/updateStock
+ * @description updates product stock total safely while preserving active reserved stock.
+ */
+const updateStock = async (req, res) => {
+  try {
+    const { id, totalStock } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Product ID is required",
+      });
+    }
+
+    const stockNum = Number(totalStock);
+    if (isNaN(stockNum) || !Number.isInteger(stockNum) || stockNum < 0) {
+      return res.status(400).json({
+        message: "Total stock must be a non-negative integer",
+      });
+    }
+
+    const existingProduct = await productModel.findById(id);
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    if (stockNum < existingProduct.reservedStock) {
+      return res.status(400).json({
+        message: `Total stock (${stockNum}) cannot be less than current active reserved stock (${existingProduct.reservedStock})`,
+      });
+    }
+
+    const newAvailable = stockNum - existingProduct.reservedStock;
+
+    // Atomic update preserving current reservedStock
+    const updatedProduct = await productModel.findOneAndUpdate(
+      {
+        _id: id,
+        reservedStock: existingProduct.reservedStock
+      },
+      {
+        totalStock: stockNum,
+        availableStock: newAvailable
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      // In case reservedStock changed concurrently, re-read and retry or fail safely
+      const latest = await productModel.findById(id);
+      if (stockNum < latest.reservedStock) {
+        return res.status(400).json({
+          message: `Total stock (${stockNum}) cannot be less than current active reserved stock (${latest.reservedStock})`,
+        });
+      }
+      const retryAvailable = stockNum - latest.reservedStock;
+      const retryUpdated = await productModel.findByIdAndUpdate(
+        id,
+        {
+          totalStock: stockNum,
+          availableStock: retryAvailable
+        },
+        { new: true }
+      );
+      return res.status(200).json({
+        message: "Product stock updated successfully!",
+        product: retryUpdated,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Product stock updated successfully!",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("updateStock error:", error.message);
+    return res.status(500).json({
+      message: "Error updating product stock",
+    });
+  }
+};
+
+module.exports = {
+  addProduct,
+  listProducts,
+  removeProduct,
+  getProduct,
+  updateBestseller,
+  updateStock
+};

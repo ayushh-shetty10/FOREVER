@@ -7,7 +7,7 @@ import ProductPrice from "../components/product/ProductPrice";
 import ProductBadge from "../components/product/ProductBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { ShieldCheck, Truck, RotateCcw, AlertTriangle, PackageX } from "lucide-react";
 
 // Product Details Loading Skeleton
 const ProductSkeleton = () => (
@@ -103,6 +103,10 @@ const Product = () => {
     return <ProductSkeleton />;
   }
 
+  const availableStock = productData.availableStock !== undefined ? productData.availableStock : 10;
+  const isOutOfStock = availableStock === 0;
+  const isLowStock = availableStock > 0 && availableStock <= 5;
+
   return (
     <div className="container-store py-8 min-h-screen transition-opacity duration-500 ease-in opacity-100 font-sans">
       {/* Breadcrumbs Section */}
@@ -128,6 +132,11 @@ const Product = () => {
             {productData.bestseller && (
               <ProductBadge>BESTSELLER</ProductBadge>
             )}
+            {isOutOfStock && (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-xs">
+                OUT OF STOCK
+              </span>
+            )}
             <span className="text-[10px] font-semibold tracking-widest text-[#C6A15B] uppercase">
               {productData.category} &bull; {productData.subCategory}
             </span>
@@ -138,9 +147,24 @@ const Product = () => {
             {productData.name}
           </h1>
 
-          {/* Price */}
-          <div className="flex items-baseline gap-2 mb-4">
-            <ProductPrice price={productData.price} className="text-3xl text-primary font-semibold font-sans tracking-wide" />
+          {/* Price & Stock Notice */}
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="flex items-baseline gap-2">
+              <ProductPrice price={productData.price} className="text-3xl text-primary font-semibold font-sans tracking-wide" />
+            </div>
+
+            {/* Inventory Stock Indicator */}
+            {isOutOfStock ? (
+              <div className="flex items-center gap-2 text-destructive font-semibold text-xs tracking-wider uppercase bg-destructive/10 border border-destructive/20 p-2.5 rounded-xs mt-1">
+                <PackageX className="size-4 shrink-0" />
+                <span>Currently Out of Stock &mdash; Check back soon</span>
+              </div>
+            ) : isLowStock ? (
+              <div className="flex items-center gap-2 text-amber-800 font-semibold text-xs tracking-wider uppercase bg-amber-50 border border-amber-200 p-2.5 rounded-xs mt-1">
+                <AlertTriangle className="size-4 shrink-0 text-amber-600" />
+                <span>Only {availableStock} {availableStock === 1 ? 'unit' : 'units'} left in stock</span>
+              </div>
+            ) : null}
           </div>
 
           <Separator className="bg-border/60 my-2" />
@@ -166,7 +190,8 @@ const Product = () => {
                   key={index}
                   onClick={() => setSize(item)}
                   type="button"
-                  className={`min-w-[80px] h-11 px-4 border text-xs tracking-wider font-sans font-medium uppercase rounded-xs transition-all duration-300 cursor-pointer ${
+                  disabled={isOutOfStock}
+                  className={`min-w-[80px] h-11 px-4 border text-xs tracking-wider font-sans font-medium uppercase rounded-xs transition-all duration-300 cursor-pointer disabled:opacity-40 disabled:pointer-events-none ${
                     size === item
                       ? "bg-muted border-primary border-[1.5px] text-primary font-semibold"
                       : "bg-[#FAF8F4] border-border/80 text-foreground hover:border-primary/50 hover:text-primary hover:bg-white"
@@ -183,9 +208,10 @@ const Product = () => {
             <button
               onClick={() => AddToCartFunc(productData._id, size)}
               type="button"
-              className="w-full sm:w-[260px] h-12 bg-primary hover:bg-[#591621] text-primary-foreground text-xs uppercase tracking-widest font-sans font-medium rounded-xs shadow-subtle hover:shadow-elevated transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/45"
+              disabled={isOutOfStock}
+              className="w-full sm:w-[260px] h-12 bg-primary hover:bg-[#591621] disabled:bg-muted-foreground/30 disabled:text-muted-foreground text-primary-foreground text-xs uppercase tracking-widest font-sans font-medium rounded-xs shadow-subtle hover:shadow-elevated transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:cursor-not-allowed disabled:pointer-events-none"
             >
-              Add to Bag
+              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
             </button>
           </div>
 

@@ -62,10 +62,13 @@ const placeOrderCOD = async (req, res) => {
     const confirmRes = await confirmReservation({ reservationId: reservation._id, orderId: Order._id });
 
     if (!confirmRes.success) {
-      await orderModel.findByIdAndUpdate(Order._id, { status: "Failed" });
-      return res.status(400).json({
-        success: false,
-        message: `Failed to confirm stock reservation for COD order: ${confirmRes.message}`
+      // Stock reservation could not be confirmed (e.g. RELEASED/expired)
+      await orderModel.findByIdAndUpdate(Order._id, { status: "REQUIRED_CHECK", payment: true });
+      return res.status(200).json({
+        success: true,
+        isRequiredCheck: true,
+        message: "COD order placed, but stock reservation could not be confirmed. Marked for REQUIRED_CHECK.",
+        Order
       });
     }
 
@@ -203,10 +206,11 @@ const verifyStripe = async (req, res) => {
       const session = await stripe.checkout.sessions.retrieve(session_id);
 
       if (session.payment_status === 'paid' && session.metadata.orderId === orderId) {
-        // Attempt reservation confirmation FIRST to ensure reservation hasn't expired/been released
+        // Attempt stock reservation confirmation FIRST
         const confirmRes = await confirmReservation({ orderId });
-        
+
         if (confirmRes.success) {
+          // NORMAL SUCCESS: Reservation confirmed -> payment = true, normal status
           await orderModel.findByIdAndUpdate(orderId, { payment: true });
           await userModel.findByIdAndUpdate(userId, { cartData: {} });
           return res.status(200).json({
@@ -214,11 +218,16 @@ const verifyStripe = async (req, res) => {
             message: "Payment verified successfully!"
           });
         } else {
-          // Reservation could not be confirmed (e.g. RELEASED by worker prior to payment verification)
-          await orderModel.findByIdAndUpdate(orderId, { status: "Failed" });
-          return res.status(400).json({
-            success: false,
-            message: `Payment verification failed: ${confirmRes.message}`
+          // LATE PAYMENT SUCCESS / EXPIRED RESERVATION:
+          // Payment provider verified payment success, but stock reservation is RELEASED!
+          // Set status = REQUIRED_CHECK, payment = true. DO NOT re-reserve or mutate stock.
+          await orderModel.findByIdAndUpdate(orderId, { payment: true, status: "REQUIRED_CHECK" });
+          await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+          return res.status(200).json({
+            success: true,
+            isRequiredCheck: true,
+            message: "Payment verified, but stock reservation expired. Order marked for REQUIRED_CHECK."
           });
         }
       } else {
@@ -355,6 +364,7 @@ const verifyRazorpay = async (req, res) => {
       const confirmRes = await confirmReservation({ orderId });
 
       if (confirmRes.success) {
+        // NORMAL SUCCESS
         await orderModel.findByIdAndUpdate(orderId, { payment: true });
         await userModel.findByIdAndUpdate(req.user.id, { cartData: {} });
         return res.status(201).json({
@@ -362,10 +372,15 @@ const verifyRazorpay = async (req, res) => {
           message: "Payment (Razorpay) successfull!",
         });
       } else {
-        await orderModel.findByIdAndUpdate(orderId, { status: "Failed" });
-        return res.status(400).json({
-          success: false,
-          message: `Payment verification failed: ${confirmRes.message}`
+        // LATE PAYMENT SUCCESS / EXPIRED RESERVATION:
+        // Set status = REQUIRED_CHECK, payment = true. DO NOT re-reserve or mutate stock.
+        await orderModel.findByIdAndUpdate(orderId, { payment: true, status: "REQUIRED_CHECK" });
+        await userModel.findByIdAndUpdate(req.user.id, { cartData: {} });
+
+        return res.status(200).json({
+          success: true,
+          isRequiredCheck: true,
+          message: "Payment verified, but stock reservation expired. Order marked for REQUIRED_CHECK."
         });
       }
     } else {

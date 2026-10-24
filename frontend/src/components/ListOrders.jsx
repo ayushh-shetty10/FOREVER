@@ -18,7 +18,8 @@ import {
   Info,
   ExternalLink,
   ChevronRight,
-  TrendingDown
+  TrendingDown,
+  AlertTriangle
 } from 'lucide-react'
 import {
   Sheet,
@@ -89,6 +90,7 @@ const ListOrders = () => {
   const totalOrders = orders.length
   const pendingOrders = orders.filter(o => o.status !== 'Delivered' && o.status !== 'Failed').length
   const completedOrders = orders.filter(o => o.status === 'Delivered').length
+  const requiredCheckCount = orders.filter(o => o.status === 'REQUIRED_CHECK').length
   const paidRevenue = orders.reduce((sum, o) => sum + (o.payment ? o.amount : 0), 0)
 
   const filteredOrders = filterStatus === 'All' 
@@ -110,7 +112,7 @@ const ListOrders = () => {
     return val
   }
 
-  const statusCategories = ['All', 'Order Placed', 'Packing', 'Shipped', 'Out for Delivery', 'Delivered', 'Failed']
+  const statusCategories = ['All', 'REQUIRED_CHECK', 'Order Placed', 'Packing', 'Shipped', 'Out for Delivery', 'Delivered', 'Failed']
 
   return (
     <div className="p-6 md:p-8 flex flex-col gap-6 font-sans min-h-screen">
@@ -118,7 +120,7 @@ const ListOrders = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-border/40 select-none">
         <div>
           <h1 className="text-xl sm:text-2xl font-display text-foreground tracking-normal uppercase">Order Management</h1>
-          <p className="text-xs text-[#756E67] mt-1">Track store transactions, verify invoices, or update fulfillment statuses.</p>
+          <p className="text-xs text-[#756E67] mt-1">Track store transactions, resolve stock checks, or update fulfillment statuses.</p>
         </div>
         <button
           onClick={() => fetchOrders(true)}
@@ -143,17 +145,19 @@ const ListOrders = () => {
 
         <div className="bg-white p-5 rounded-xs border border-[#E5DED4] flex items-center justify-between shadow-xs">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold font-sans">In Progress</span>
-            <span className="text-lg font-bold text-foreground font-sans">{pendingOrders}</span>
+            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold font-sans">Required Check</span>
+            <span className={`text-lg font-bold font-sans ${requiredCheckCount > 0 ? 'text-amber-700' : 'text-foreground'}`}>
+              {requiredCheckCount}
+            </span>
           </div>
-          <div className="p-2.5 bg-blue-50 text-blue-800 rounded-sm">
-            <Clock className="size-4.5" />
+          <div className="p-2.5 bg-amber-50 text-amber-800 rounded-sm">
+            <AlertTriangle className="size-4.5" />
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-xs border border-[#E5DED4] flex items-center justify-between shadow-xs">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold">Fulfillment Rate</span>
+            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold">Delivered</span>
             <span className="text-lg font-bold text-foreground font-sans">{completedOrders}</span>
           </div>
           <div className="p-2.5 bg-emerald-50 text-emerald-800 rounded-sm">
@@ -163,7 +167,7 @@ const ListOrders = () => {
 
         <div className="bg-white p-5 rounded-xs border border-[#E5DED4] flex items-center justify-between shadow-xs">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold">Paid Income</span>
+            <span className="text-[10px] text-[#756E67] uppercase tracking-widest font-semibold">Paid Revenue</span>
             <span className="text-lg font-bold text-[#6F1D2B] font-sans">{currency}{formatPrice(paidRevenue)}</span>
           </div>
           <div className="p-2.5 bg-emerald-50 text-emerald-800 rounded-sm">
@@ -214,7 +218,6 @@ const ListOrders = () => {
         <div className="grid grid-cols-1 gap-4 font-sans">
           {filteredOrders.map((order) => {
             const truncatedId = String(order._id).substring(String(order._id).length - 8)
-            const firstProduct = order.items?.[0]
 
             return (
               <div
@@ -299,12 +302,13 @@ const ListOrders = () => {
 
                   {/* Action CTA triggers */}
                   <div className="flex items-center gap-2">
-                    <div className="w-36 select-none leading-none">
+                    <div className="w-40 select-none leading-none">
                       <select 
                         value={order.status}
                         onChange={(e) => handleStatusChange(order._id, e.target.value)}
                         className="w-full h-8 px-2 border border-border bg-white rounded-xs text-[10px] uppercase tracking-wider font-semibold cursor-pointer outline-none focus:border-[#C6A15B]"
                       >
+                        <option value="REQUIRED_CHECK">REQUIRED CHECK</option>
                         <option value="Order Placed">Order Placed</option>
                         <option value="Packing">Packing</option>
                         <option value="Shipped">Shipped</option>
@@ -355,6 +359,7 @@ const ListOrders = () => {
                     onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
                     className="flex-1 h-9 px-3 border border-border bg-white rounded-xs text-xs font-semibold uppercase tracking-wider cursor-pointer outline-none focus:border-[#C6A15B]"
                   >
+                    <option value="REQUIRED_CHECK">REQUIRED CHECK</option>
                     <option value="Order Placed">Order Placed</option>
                     <option value="Packing">Packing</option>
                     <option value="Shipped">Shipped</option>
@@ -454,7 +459,7 @@ const ListOrders = () => {
                   <div className="flex justify-between text-muted-foreground text-xs">
                     <span>Delivery Charge</span>
                     <span className="font-medium text-foreground">
-                      {selectedOrder.amount - delivery_fee === 0 ? "Free" : `${currency}{formatPrice(delivery_fee)}`}
+                      {selectedOrder.amount - delivery_fee === 0 ? "Free" : `${currency}${formatPrice(delivery_fee)}`}
                     </span>
                   </div>
 

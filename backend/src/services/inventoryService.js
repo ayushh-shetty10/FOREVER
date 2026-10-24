@@ -14,9 +14,8 @@ const { stockReservationModel } = require("../models/stockReservationModel");
  * @param {string|mongoose.Types.ObjectId} params.userId
  * @param {string|mongoose.Types.ObjectId} [params.orderId]
  * @param {Array<{productId: string, quantity: number}>} params.items
- * @param {number} [params.expiryMinutes=15]
  */
-const reserveStock = async ({ userId, orderId, items, expiryMinutes = 15 }) => {
+const reserveStock = async ({ userId, orderId, items }) => {
     if (!items || !Array.isArray(items) || items.length === 0) {
         return {
             success: false,
@@ -102,8 +101,9 @@ const reserveStock = async ({ userId, orderId, items, expiryMinutes = 15 }) => {
         };
     }
 
-    // ALL items succeeded: Create StockReservation record
-    const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
+    // ALL items succeeded: Create StockReservation record using EXPIRY_MIN from process.env
+    const expiryMins = Number(process.env.EXPIRY_MIN) || 15;
+    const expiresAt = new Date(Date.now() + expiryMins * 60 * 1000);
     const reservation = await stockReservationModel.create({
         userId,
         orderId: validOrderId,
@@ -116,7 +116,6 @@ const reserveStock = async ({ userId, orderId, items, expiryMinutes = 15 }) => {
         return {
             success:false,
             message:"Failed to create new reservation in db",
-            
         }
     }
 

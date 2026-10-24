@@ -11,6 +11,8 @@ const ProductCard = ({ product }) => {
   const price = product.price
   const images = product.images || []
   const bestseller = product.bestseller
+  const availableStock = product.availableStock !== undefined ? product.availableStock : 10
+  const isOutOfStock = availableStock === 0
 
   const primaryImage = images[0] || ''
   const secondaryImage = images[1] || null
@@ -23,12 +25,19 @@ const ProductCard = ({ product }) => {
     >
       {/* Product Image Area */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted rounded-md border border-border/10">
-        {/* Bestseller Badge */}
-        {bestseller && (
-          <ProductBadge className="absolute top-2.5 left-2.5 z-10">
-            Bestseller
-          </ProductBadge>
-        )}
+        {/* Badges Container */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1.5 items-start">
+          {bestseller && (
+            <ProductBadge>
+              Bestseller
+            </ProductBadge>
+          )}
+          {isOutOfStock && (
+            <span className="bg-destructive text-destructive-foreground text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-xs shadow-xs">
+              Out of Stock
+            </span>
+          )}
+        </div>
 
         {/* Fallback Image if none provided */}
         {!primaryImage ? (
@@ -43,12 +52,12 @@ const ProductCard = ({ product }) => {
               alt={name}
               loading="lazy"
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out group-hover:scale-[1.02] ${
-                hasSecondaryImage ? 'group-hover:opacity-0' : ''
-              }`}
+                isOutOfStock ? 'opacity-60 grayscale-[30%]' : ''
+              } ${hasSecondaryImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
             />
             
             {/* Secondary Hover Image */}
-            {hasSecondaryImage && (
+            {hasSecondaryImage && !isOutOfStock && (
               <img
                 src={secondaryImage}
                 alt={`${name} alternate view`}
@@ -65,7 +74,14 @@ const ProductCard = ({ product }) => {
         <h3 className="text-xs sm:text-sm font-medium tracking-wide text-foreground line-clamp-1 group-hover:text-primary transition-colors">
           {name}
         </h3>
-        <ProductPrice price={price} />
+        <div className="flex items-center justify-between">
+          <ProductPrice price={price} />
+          {isOutOfStock ? (
+            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">Out of Stock</span>
+          ) : availableStock <= 3 ? (
+            <span className="text-[9px] font-semibold text-amber-700 uppercase tracking-wider">Only {availableStock} Left</span>
+          ) : null}
+        </div>
       </div>
     </Link>
   )

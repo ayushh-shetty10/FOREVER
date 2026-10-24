@@ -53,6 +53,16 @@ export const UpdateBestsellerApi = async ({ id, bestseller }) => {
     }
 }
 
+export const UpdateStockApi = async ({ id, totalStock }) => {
+    try {
+        const response = await api.post("api/product/updateStock", { id, totalStock });
+        return response.data;
+    } catch(err) {
+        toast.error(getApiErrorMessage(err));
+        if (err?.response?.data) return err.response.data;
+    }
+}
+
 export const RemoveItemApi = async ({_id})=> {
     try{
     const response = await api.post("api/product/removeProduct",{id:_id});
@@ -147,7 +157,8 @@ export const PlaceOrderCodApi = async(orderData) => {
         return response.data;
     }
     catch(err){
-    toast.error(getApiErrorMessage(err));
+        if (err?.response?.data) return err.response.data;
+        toast.error(getApiErrorMessage(err));
         console.log(err);
     }
 }
@@ -189,7 +200,8 @@ export const PlaceOrderStripeApi = async(orderData)=> {
         return response.data;
     }
     catch(err){
-    toast.error(getApiErrorMessage(err));
+        if (err?.response?.data) return err.response.data;
+        toast.error(getApiErrorMessage(err));
         console.log(err);
     }
 }
@@ -200,7 +212,8 @@ export const PlaceOrderRazorpayApi = async(orderData)=>{
         return response.data;
     }
     catch(err){
-    toast.error(getApiErrorMessage(err));
+        if (err?.response?.data) return err.response.data;
+        toast.error(getApiErrorMessage(err));
         console.log(err);
     }
 }
@@ -211,7 +224,7 @@ export const verifyRazorpayApi = async(paymentData) => {
         return response.data;
     }
     catch(err){
-    toast.error(getApiErrorMessage(err));
+        toast.error(getApiErrorMessage(err));
         console.log(err);
     }
 }
@@ -236,5 +249,3 @@ export const verifyStripeApi = async(paymentData) => {
         console.log(err);
     }
 }
-
-

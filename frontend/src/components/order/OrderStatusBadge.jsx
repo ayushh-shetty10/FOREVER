@@ -20,6 +20,9 @@ const OrderStatusBadge = ({ status }) => {
     case 'Delivered':
       styles = "bg-emerald-50/60 text-emerald-700 border-emerald-200/40"
       break
+    case 'REQUIRED_CHECK':
+      styles = "bg-amber-100 text-amber-900 border-amber-300 font-bold"
+      break
     case 'Cancelled':
     case 'Failed':
       styles = "bg-red-50/60 text-red-700 border-red-200/40"
@@ -35,6 +38,7 @@ const OrderStatusBadge = ({ status }) => {
     'Shipped': 'bg-amber-500',
     'Out for Delivery': 'bg-purple-500',
     'Delivered': 'bg-emerald-500',
+    'REQUIRED_CHECK': 'bg-amber-600',
     'Cancelled': 'bg-red-500',
     'Failed': 'bg-red-500',
   }

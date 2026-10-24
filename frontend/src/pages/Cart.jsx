@@ -3,7 +3,7 @@ import { useShop } from '../hook/useShop'
 import CartTotal from '../components/CartTotal'
 import ProductPrice from '../components/product/ProductPrice'
 import { useNavigate, Link } from 'react-router-dom'
-import { Trash2, ShoppingBag } from 'lucide-react'
+import { Trash2, ShoppingBag, AlertTriangle, PackageX } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 const Cart = () => {
@@ -85,20 +85,35 @@ const Cart = () => {
             const productData = products.find((product) => product._id === item._id)
             if (!productData) return null
 
+            const availableStock = productData.availableStock !== undefined ? productData.availableStock : 10
+            const isOutOfStock = availableStock === 0
+            const isInsufficientStock = availableStock > 0 && availableStock < item.quantity
+
             return (
               <div 
                 key={`${item._id}-${item.size}-${index}`}
-                className="flex items-start justify-between gap-4 p-4 bg-card/40 border border-border/50 rounded-md hover:border-border transition-colors duration-300"
+                className={`flex flex-col md:flex-row md:items-start justify-between gap-4 p-4 border rounded-md transition-colors duration-300 ${
+                  isOutOfStock
+                    ? 'bg-destructive/5 border-destructive/30'
+                    : isInsufficientStock
+                    ? 'bg-amber-50/50 border-amber-200'
+                    : 'bg-card/40 border-border/50 hover:border-border'
+                }`}
               >
                 {/* Product Thumbnail and details block */}
                 <div className="flex gap-4">
                   {/* Aspect Ratio 3:4 Box */}
-                  <div className="w-20 md:w-24 aspect-[3/4] shrink-0 bg-muted rounded-sm overflow-hidden border border-border/10">
+                  <div className="w-20 md:w-24 aspect-[3/4] shrink-0 bg-muted rounded-sm overflow-hidden border border-border/10 relative">
                     <img 
                       src={productData.images[0]} 
                       alt={productData.name} 
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${isOutOfStock ? 'opacity-50 grayscale-[40%]' : ''}`}
                     />
+                    {isOutOfStock && (
+                      <span className="absolute inset-x-0 bottom-0 bg-destructive text-white text-[8px] font-bold text-center py-0.5 uppercase tracking-wider">
+                        Out of Stock
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-col justify-between">
@@ -108,13 +123,26 @@ const Cart = () => {
                         {productData.name}
                       </h3>
                       {/* Category metadata */}
-                      <p className="text-[10px] text-[#C6A15B] font-semibold tracking-wider uppercase mb-3">
+                      <p className="text-[10px] text-[#C6A15B] font-semibold tracking-wider uppercase mb-2">
                         {productData.category} &bull; {productData.subCategory}
                       </p>
                       {/* Size tag */}
                       <div className="inline-block bg-muted/60 text-muted-foreground text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-xs select-none">
                         SIZE: {item.size}
                       </div>
+
+                      {/* Stock Warning Messages */}
+                      {isOutOfStock ? (
+                        <div className="flex items-center gap-1.5 text-destructive text-[11px] font-semibold tracking-wide uppercase mt-2">
+                          <PackageX className="size-3.5 shrink-0" />
+                          <span>Product is currently out of stock</span>
+                        </div>
+                      ) : isInsufficientStock ? (
+                        <div className="flex items-center gap-1.5 text-amber-800 text-[11px] font-semibold tracking-wide uppercase mt-2">
+                          <AlertTriangle className="size-3.5 text-amber-600 shrink-0" />
+                          <span>Only {availableStock} available in store</span>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Pricing */}
@@ -125,7 +153,7 @@ const Cart = () => {
                 </div>
 
                 {/* Steppers & actions */}
-                <div className="flex flex-col items-end justify-between h-full min-h-[90px] min-w-[100px]">
+                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-between h-full min-h-[90px] min-w-[100px] border-t md:border-t-0 pt-3 md:pt-0 border-border/30">
                   {/* Trash action */}
                   <button 
                     onClick={() => handleRemoveItem(item._id, item.size)}

@@ -6,7 +6,15 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useShop } from '../hook/useShop'
 import { toast } from 'react-toastify'
 import { Separator } from '@/components/ui/separator'
-import { Banknote, CreditCard, ChevronRight } from 'lucide-react'
+import { Banknote, CreditCard, ChevronRight, AlertCircle, Trash2, RefreshCw } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 const PlaceOrder = () => {
   const [method, setMethod] = useState("cod")
@@ -22,6 +30,7 @@ const PlaceOrder = () => {
     PlaceOrderRazorpayFunc,
     VerifyRazorpayFunc,
     MarkOrderFailedFunc,
+    UpdateCartFunc,
     loading
   } = useShop()
 
@@ -37,10 +46,53 @@ const PlaceOrder = () => {
     phone: ""
   })
 
+  // Stock issue modal state
+  const [stockIssuesModal, setStockIssuesModal] = useState({
+    open: false,
+    message: "",
+    stockIssues: []
+  })
+
   const onChangeHandler = (e) => {
     const name = e.target.name
     const value = e.target.value
     setFormData((data) => ({ ...data, [name]: value }))
+  }
+
+  const handleStockError = (response) => {
+    const issues = response?.stockIssues || []
+    setStockIssuesModal({
+      open: true,
+      message: response?.message || "Some items in your cart are no longer available in the requested quantities.",
+      stockIssues: issues
+    })
+  }
+
+  const handleRemoveUnavailableItems = () => {
+    if (!stockIssuesModal.stockIssues || stockIssuesModal.stockIssues.length === 0) {
+      setStockIssuesModal({ open: false, message: "", stockIssues: [] })
+      return
+    }
+
+    // Iterate through stockIssues and remove or adjust quantities in cart
+    stockIssuesModal.stockIssues.forEach(issue => {
+      const { productId, availableQuantity } = issue
+      // Find matching size in cartItems for this productId
+      if (cartItems[productId]) {
+        for (const size in cartItems[productId]) {
+          if (cartItems[productId][size] > 0) {
+            if (availableQuantity === 0) {
+              UpdateCartFunc(productId, size, 0)
+            } else {
+              UpdateCartFunc(productId, size, availableQuantity)
+            }
+          }
+        }
+      }
+    })
+
+    toast.info("Updated bag to available quantities. Please retry placing your order.")
+    setStockIssuesModal({ open: false, message: "", stockIssues: [] })
   }
 
   const handleSubmit = async (e) => {
@@ -80,6 +132,10 @@ const PlaceOrder = () => {
       switch (method) {
         case "cod": {
           const response = await PlaceOrderCODFunc(orderData)
+          if (response && response.success === false && response.stockIssues) {
+            handleStockError(response)
+            return
+          }
           if (response && response.message === "Order placed (COD) successfully!") {
             setCartItems({})
             toast.success("Order Placed successfully!")
@@ -89,6 +145,10 @@ const PlaceOrder = () => {
         }
         case "razorpay": {
           const responseRazorpay = await PlaceOrderRazorpayFunc(orderData)
+          if (responseRazorpay && responseRazorpay.success === false && responseRazorpay.stockIssues) {
+            handleStockError(responseRazorpay)
+            return
+          }
           if (responseRazorpay && responseRazorpay.message === "Order placed (Razorpay) successfully!") {
             const { order } = responseRazorpay
             const options = {
@@ -121,7 +181,7 @@ const PlaceOrder = () => {
                 "address": "test Address"
               },
               "theme": {
-                "color": "#6F1D2B" // Styled to match Burgundy brand color
+                "color": "#6F1D2B"
               }
             }
             const rzp2 = new window.Razorpay(options)
@@ -131,6 +191,10 @@ const PlaceOrder = () => {
         }
         case "stripe": {
           const responseStripe = await PlaceOrderStripeFunc(orderData)
+          if (responseStripe && responseStripe.success === false && responseStripe.stockIssues) {
+            handleStockError(responseStripe)
+            return
+          }
           if (responseStripe && responseStripe.message === "Order placed (Stripe) successfully!") {
             const { session_url } = responseStripe
             window.location.replace(session_url)
@@ -427,6 +491,52 @@ const PlaceOrder = () => {
           </button>
         </div>
       </form>
+
+      {/* Stock Reservation Failure Dialog Modal */}
+      <Dialog open={stockIssuesModal.open} onOpenChange={(open) => !open && setStockIssuesModal(prev => ({ ...prev, open: false }))}>
+        <DialogContent className="w-[90vw] max-w-md bg-white border border-border rounded-xs p-6 font-sans">
+          <DialogHeader className="select-none flex flex-col gap-2">
+            <DialogTitle className="text-base uppercase tracking-widest text-destructive font-bold flex items-center gap-2">
+              <AlertCircle className="size-5 text-destructive" />
+              <span>Inventory Reservation Error</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
+              {stockIssuesModal.message}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* List of Problematic Items */}
+          <div className="flex flex-col gap-3 my-4 max-h-[180px] overflow-y-auto">
+            {stockIssuesModal.stockIssues.map((issue, idx) => {
+              const prod = products.find(p => p._id === issue.productId)
+              return (
+                <div key={idx} className="flex items-center justify-between p-3 bg-destructive/5 border border-destructive/20 rounded-xs text-xs">
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="font-semibold text-foreground truncate">{prod ? prod.name : issue.productId}</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">Requested: {issue.requestedQuantity}</span>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-xs font-bold text-destructive">
+                      {issue.availableQuantity === 0 ? "Out of Stock" : `Only ${issue.availableQuantity} available`}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 justify-end">
+            <button
+              onClick={handleRemoveUnavailableItems}
+              type="button"
+              className="w-full sm:w-auto h-10 px-5 bg-primary hover:bg-[#591621] text-primary-foreground text-xs uppercase tracking-wider font-semibold rounded-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 select-none"
+            >
+              <Trash2 className="size-3.5" />
+              <span>Update Bag & Continue</span>
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
