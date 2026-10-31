@@ -14,7 +14,7 @@ const Home = () => {
       <HeroSection />
 
       {/* 2. Explore Collections (Category Showcase) */}
-      <CategoryShowcase />
+      {/* <CategoryShowcase /> */}
 
       {/* 3. Latest Collections */}
       <LatestCollections />

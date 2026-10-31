@@ -49,7 +49,11 @@ const register = async(req,res) => {
 
     const token = createToken(user._id);
 
-    res.cookie("token",token);
+   res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+});
 
     return res.status(201).json({
         message :"User registered successfully!",
@@ -96,7 +100,11 @@ const login = async(req,res)=>{
 
     const token = createToken(user._id);
 
-    res.cookie("token",token);
+    res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+});
 
     return res.status(201).json({
         message:"User logged in successfully!",
@@ -128,7 +136,11 @@ const logout = async(req,res)=>{
         token
     })
 
-    res.clearCookie("token");
+    res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+});
     return res.status(200).json({
             message:"User logged out successfully!"
         });
