@@ -1,6 +1,6 @@
 import React from 'react'
 import HeroSection from '../components/home/HeroSection'
-import CategoryShowcase from '../components/home/CategoryShowcase'
+//import CategoryShowcase from '../components/home/CategoryShowcase'
 import LatestCollections from '../components/LatestCollections'
 import EditorialSection from '../components/home/EditorialSection'
 import BestSellers from '../components/BestSellers'

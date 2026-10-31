@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { assets } from '../../assets/frontend_assets/assets'
-import SareeHeroImage from "../../assets/SareeHeroimage.jpg"
+import SareeHeroImage from "../../assets/SareeHeroImage.jpg"
 
 
 const HeroSection = () => {
